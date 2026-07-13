@@ -179,11 +179,17 @@
         @* Messages de confirmation/erreur globaux *@
         @if (TempData["Succes"] != null)
         {
-            <div class="alert alert-success">@TempData["Succes"]</div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["Succes"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         }
         @if (TempData["Erreur"] != null)
         {
-            <div class="alert alert-danger">@TempData["Erreur"]</div>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["Erreur"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         }
 
         @* C'est ici que le contenu de chaque page (Views/.../Index.cshtml) s'affiche *@

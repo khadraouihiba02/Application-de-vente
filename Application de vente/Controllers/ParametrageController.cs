@@ -202,25 +202,25 @@ namespace ApplicationDeVente.Controllers
         // POST: /Parametrage/CreerTaux
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreerTaux(TauxChange taux)
+        public async Task<IActionResult> CreerTaux(TauxChange model)
         {
             if (ModelState.IsValid)
             {
-                if (taux.DateFin <= taux.DateDebut)
+                if (model.DateFin <= model.DateDebut)
                 {
                     ModelState.AddModelError("DateFin", "La date de fin doit être après la date de début.");
                     ViewData["Title"] = "Nouveau Taux de Change";
-                    return View(taux);
+                    return View(model);
                 }
 
-                _db.TauxChanges.Add(taux);
+                _db.TauxChanges.Add(model);
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Taux de change ({taux.Taux} {taux.DeviseSource}/{taux.DeviseCible}) ajouté avec succès.";
+                TempData["Succes"] = $"Taux de change ({model.Taux} {model.DeviseSource}/{model.DeviseCible}) ajouté avec succès.";
                 return RedirectToAction(nameof(TauxChange));
             }
 
             ViewData["Title"] = "Nouveau Taux de Change";
-            return View(taux);
+            return View(model);
         }
 
         // POST: /Parametrage/SupprimerTaux/5

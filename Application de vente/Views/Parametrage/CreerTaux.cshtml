@@ -1,0 +1,89 @@
+@model ApplicationDeVente.Models.TauxChange
+@{
+    ViewData["Title"] = "Nouveau Taux de Change";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#d9230f; color:white;">
+                ➕ Ajouter un Taux de Change EUR / TND
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="CreerTaux" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="alert alert-info small">
+                        <strong>💡 Info :</strong> Définissez un taux de conversion EUR → TND
+                        pour une période donnée. Ex: 1 EUR = 3.3800 TND du 01/07/2026 au 31/07/2026.
+                        <br/>⚠️ Évitez les périodes qui se chevauchent pour la même paire de devises.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="DeviseSource" class="form-label fw-semibold"></label>
+                            <select asp-for="DeviseSource" class="form-select" id="deviseSourceSelect" onchange="updateCurrencyLabel()">
+                                <option value="EUR">EUR — Euro</option>
+                                <option value="USD">USD — Dollar américain</option>
+                                <option value="GBP">GBP — Livre sterling</option>
+                            </select>
+                            <span asp-validation-for="DeviseSource" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end justify-content-center pb-1">
+                            <span class="fw-bold fs-4 text-muted">→</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DeviseCible" class="form-label fw-semibold"></label>
+                            <select asp-for="DeviseCible" class="form-select">
+                                <option value="TND">TND — Dinar tunisien</option>
+                            </select>
+                            <span asp-validation-for="DeviseCible" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label asp-for="Taux" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="currencyLabel">1 EUR =</span>
+                                <input asp-for="Taux" type="number" lang="en" class="form-control" placeholder="ex: 3.3800" step="0.0001" />
+                                <span class="input-group-text">TND</span>
+                            </div>
+                            <span asp-validation-for="Taux" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="DateDebut" class="form-label fw-semibold"></label>
+                            <input asp-for="DateDebut" class="form-control" type="date" asp-format="{0:yyyy-MM-dd}" min="2020-01-01" max="2050-12-31" />
+                            <span asp-validation-for="DateDebut" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DateFin" class="form-label fw-semibold"></label>
+                            <input asp-for="DateFin" class="form-control" type="date" asp-format="{0:yyyy-MM-dd}" min="2020-01-01" max="2050-12-31" />
+                            <span asp-validation-for="DateFin" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <hr class="mt-4" />
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="TauxChange" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary fw-bold">💾 Enregistrer le Taux</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function updateCurrencyLabel() {
+            var selectedDevise = document.getElementById("deviseSourceSelect").value;
+            document.getElementById("currencyLabel").innerText = "1 " + selectedDevise + " =";
+        }
+        
+        // Exécuter au chargement pour s'assurer que le texte est correct
+        document.addEventListener("DOMContentLoaded", function() {
+            updateCurrencyLabel();
+        });
+    </script>
+}

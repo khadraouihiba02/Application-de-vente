@@ -1,7 +1,9 @@
+using System.Globalization;
 using ApplicationDeVente.Data;
 using ApplicationDeVente.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +54,16 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// ── Configuration de la culture (pour accepter le point décimal) ──
+var customCulture = new CultureInfo("fr-FR");
+customCulture.NumberFormat.NumberDecimalSeparator = ".";
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(customCulture),
+    SupportedCultures = new List<CultureInfo> { customCulture },
+    SupportedUICultures = new List<CultureInfo> { customCulture }
+});
 
 app.UseRouting();
 
