@@ -124,6 +124,12 @@
         @* Affiché seulement si rôle = Catering *@
         @if (User.IsInRole("Catering"))
         {
+            <div class="section-label">Paramétrage</div>
+            <nav class="nav flex-column mb-3">
+                <a class="nav-link" asp-controller="Parametrage" asp-action="Articles">📦 Articles</a>
+                <a class="nav-link" asp-controller="Parametrage" asp-action="TauxChange">💱 Taux de change</a>
+            </nav>
+
             <div class="section-label">Traitement</div>
             <nav class="nav flex-column">
                 <a class="nav-link" asp-controller="Catering" asp-action="Controle">🔍 Contrôle Agent/FRS</a>

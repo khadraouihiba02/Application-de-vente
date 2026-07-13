@@ -1,0 +1,70 @@
+@model ApplicationDeVente.Models.Article
+@{
+    ViewData["Title"] = "Nouvel Article";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#d9230f; color:white;">
+                ➕ Créer un Nouvel Article
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="CreerArticle" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="alert alert-info small">
+                        <strong>💡 Info :</strong> Un article peut avoir plusieurs enregistrements
+                        pour des périodes différentes avec des prix différents.
+                        Ex: Article "Parfum X" à 50€ pour le contrat Été, 48€ pour le contrat Hiver.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="CodeArticle" class="form-label fw-semibold"></label>
+                            <input asp-for="CodeArticle" class="form-control" placeholder="ex: ART001" />
+                            <span asp-validation-for="CodeArticle" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="NomArticle" class="form-label fw-semibold"></label>
+                            <input asp-for="NomArticle" class="form-control" placeholder="ex: Parfum Chanel N°5" />
+                            <span asp-validation-for="NomArticle" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-12">
+                            <label asp-for="Description" class="form-label fw-semibold"></label>
+                            <input asp-for="Description" class="form-control" placeholder="ex: Parfum 50ml (optionnel)" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="PrixUnitaire" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <input asp-for="PrixUnitaire" class="form-control" placeholder="0.00" />
+                                <span class="input-group-text">€</span>
+                            </div>
+                            <span asp-validation-for="PrixUnitaire" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DateDebut" class="form-label fw-semibold"></label>
+                            <input asp-for="DateDebut" class="form-control" type="date" />
+                            <span asp-validation-for="DateDebut" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DateFin" class="form-label fw-semibold"></label>
+                            <input asp-for="DateFin" class="form-control" type="date" />
+                            <span asp-validation-for="DateFin" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <hr class="mt-4" />
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Articles" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary fw-bold">💾 Enregistrer l'Article</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
