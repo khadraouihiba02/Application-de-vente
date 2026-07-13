@@ -366,4 +366,8 @@ FodyWeavers.xsd
 # Contient la chaîne de connexion SQL Server et secrets
 appsettings.json
 appsettings.*.json
-!appsettings.Example.json
+!appsettings.Example.json
+
+# Fichiers d'exemples locaux
+Exemple_Import_Articles.xlsx
+
