@@ -1,0 +1,91 @@
+@{
+    ViewData["Title"] = "Gestion des Utilisateurs";
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold text-dark mb-0">👥 Gestion des Utilisateurs du Système</h4>
+        <small class="text-muted">Créer, modifier et désactiver les comptes utilisateurs</small>
+        <hr />
+    </div>
+</div>
+
+<div class="row g-4 mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-primary me-1">Agent</span>
+            <span class="badge bg-success me-1">Catering</span>
+            <span class="badge bg-warning text-dark me-1">DCF</span>
+            <span class="badge bg-dark">Admin</span>
+        </div>
+        <a href="#" class="btn btn-primary fw-bold">
+            ➕ Ajouter un utilisateur
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header fw-bold" style="background:#d9230f; color:white;">
+        📋 Liste des utilisateurs
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Nom complet</th>
+                    <th>Email</th>
+                    <th>Rôle</th>
+                    <th>Statut</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Système Administrateur</td>
+                    <td>admin@tunisair.com.tn</td>
+                    <td><span class="badge bg-dark">Admin</span></td>
+                    <td><span class="badge bg-success">Actif</span></td>
+                    <td class="text-center">
+                        <a href="#" class="btn btn-sm btn-outline-primary">✏️ Modifier</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">🔴 Désactiver</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Ben Salem</td>
+                    <td>agent@tunisair.com.tn</td>
+                    <td><span class="badge bg-primary">Agent</span></td>
+                    <td><span class="badge bg-success">Actif</span></td>
+                    <td class="text-center">
+                        <a href="#" class="btn btn-sm btn-outline-primary">✏️ Modifier</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">🔴 Désactiver</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Ali Chahed</td>
+                    <td>catering@tunisair.com.tn</td>
+                    <td><span class="badge bg-success">Catering</span></td>
+                    <td><span class="badge bg-success">Actif</span></td>
+                    <td class="text-center">
+                        <a href="#" class="btn btn-sm btn-outline-primary">✏️ Modifier</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">🔴 Désactiver</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Rania Trabelsi</td>
+                    <td>dcf@tunisair.com.tn</td>
+                    <td><span class="badge bg-warning text-dark">DCF</span></td>
+                    <td><span class="badge bg-success">Actif</span></td>
+                    <td class="text-center">
+                        <a href="#" class="btn btn-sm btn-outline-primary">✏️ Modifier</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">🔴 Désactiver</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

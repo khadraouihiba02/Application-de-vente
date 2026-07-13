@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Tableau de bord — Direction Catering";
+    var mois = DateTime.Now.ToString("MMMM yyyy");
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold text-dark mb-0">⚙ Tableau de bord — Direction Catering</h4>
+        <small class="text-muted">Contrôle et traitement des données — Mois : <strong>@mois</strong></small>
+        <hr />
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #d9230f;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">📋</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">États à valider</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #FF5722;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">⚠️</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">Trous de caisse détectés</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #4CAF50;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">💶</div>
+                <div class="fw-bold fs-3 mt-2">0 €</div>
+                <div class="text-muted small">CA total du mois</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #9C27B0;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">🧾</div>
+                <div class="fw-bold fs-3 mt-2">0 €</div>
+                <div class="text-muted small">Redevance calculée</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#d9230f; color:white;">
+                📊 Formule de calcul de la Redevance mensuelle
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Conformément au cahier des charges, la redevance retenue est
+                    <strong>la méthode la plus avantageuse pour TUNISAIR</strong> :
+                </p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-primary h-100">
+                            <div class="card-body text-center">
+                                <div style="font-size:2rem;">🧮</div>
+                                <p class="fw-bold mt-2 mb-1">Méthode 1 — Minimum garanti</p>
+                                <code class="d-block p-2 bg-light rounded">Nb Passagers × 1,10 €</code>
+                                <p class="text-muted small mt-2 mb-0">Basé sur la feuille de lignes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success h-100">
+                            <div class="card-body text-center">
+                                <div style="font-size:2rem;">📈</div>
+                                <p class="fw-bold mt-2 mb-1">Méthode 2 — Pourcentage CA</p>
+                                <code class="d-block p-2 bg-light rounded">42% × CA Réel</code>
+                                <p class="text-muted small mt-2 mb-0">Basé sur l'état des ventes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-3 mb-0">
+                    <strong>⚖️ Règle :</strong> Le système retient automatiquement <strong>le montant le plus élevé</strong> entre les deux méthodes.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#373a3c; color:white;">⚡ Actions rapides</div>
+            <div class="card-body d-grid gap-2">
+                <a asp-controller="Catering" asp-action="Controle" class="btn btn-primary fw-bold">
+                    🔍 Contrôler Agent / FRS
+                </a>
+                <a asp-controller="Catering" asp-action="Commission" class="btn btn-outline-secondary">
+                    💰 Calculer Commission PNC
+                </a>
+                <a asp-controller="Catering" asp-action="Redevance" class="btn btn-outline-secondary">
+                    🧾 Calculer Redevance
+                </a>
+                <a asp-controller="Catering" asp-action="ValiderFactures" class="btn btn-outline-secondary">
+                    ✅ Valider Factures Offres
+                </a>
+                <a asp-controller="Catering" asp-action="Recapitulatif" class="btn btn-outline-secondary">
+                    📊 Récapitulatif mensuel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

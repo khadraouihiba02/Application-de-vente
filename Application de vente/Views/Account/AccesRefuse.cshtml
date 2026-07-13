@@ -1,0 +1,55 @@
+@model dynamic
+@{
+    Layout = null;
+    ViewData["Title"] = "Accès Refusé — VAB";
+}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/simplex/bootstrap.min.css">
+    <style>
+        body {
+            background: #f4f4f4;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .error-card {
+            width: 100%;
+            max-width: 500px;
+            border-top: 4px solid #d9230f;
+            border-radius: 4px;
+        }
+        .error-header {
+            background: #d9230f;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="card error-card shadow">
+        <div class="error-header">
+            <h3 class="mb-0">⚠️ Accès Refusé</h3>
+            <small>Système VAB — Tunisair</small>
+        </div>
+        <div class="card-body text-center p-4">
+            <p class="lead fw-bold text-danger">Autorisation insuffisante</p>
+            <p class="text-muted">Vous n'avez pas les privilèges requis pour accéder à cette section de l'application de vente à bord.</p>
+            <hr />
+            <div class="d-grid gap-2">
+                <a href="@Url.Action("Login", "Account")" class="btn btn-primary fw-bold">Retour à la connexion</a>
+            </div>
+        </div>
+        <div class="card-footer text-center text-muted small bg-light py-2">
+            Direction Catering — Tunisair
+        </div>
+    </div>
+</body>
+</html>

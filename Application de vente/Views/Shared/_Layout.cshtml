@@ -1,0 +1,196 @@
+@* ════════════════════════════════════════════════════════
+   _Layout.cshtml — Template commun pour toutes les pages
+   (sauf Login qui a son propre layout = null)
+   Contient : navbar, sidebar, thème Simplex
+   ════════════════════════════════════════════════════════ *@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"] — VAB TUNISAIR</title>
+
+    @* ── Thème Bootswatch Simplex (une seule fois ici !) ── *@
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/simplex/bootstrap.min.css">
+
+    <style>
+            body { background: #f4f4f4; }
+
+            .sidebar {
+                width: 240px;
+                min-height: 100vh;
+                background: #373a3c;
+                position: fixed;
+                top: 0; left: 0;
+                padding-top: 60px;
+                z-index: 100;
+            }
+            .sidebar .brand {
+                position: absolute;
+                top: 0; left: 0; right: 0;
+                background: #d9230f;
+                padding: 0.85rem 1rem;
+                color: white;
+                font-weight: 700;
+                font-size: 0.95rem;
+            }
+            .sidebar .nav-link {
+                color: #ccc;
+                padding: 0.6rem 1.25rem;
+                font-size: 0.9rem;
+                border-left: 3px solid transparent;
+                transition: all 0.2s;
+            }
+            .sidebar .nav-link:hover,
+            .sidebar .nav-link.active {
+                color: white;
+                background: rgba(217,35,15,0.15);
+                border-left-color: #d9230f;
+            }
+            .sidebar .section-label {
+                color: #666;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                padding: 1rem 1.25rem 0.3rem;
+            }
+            .main-content {
+                margin-left: 240px;
+                padding: 1.5rem;
+            }
+            .topbar {
+                background: white;
+                border-bottom: 2px solid #d9230f;
+                padding: 0.6rem 1.5rem;
+                margin-left: 240px;
+                position: sticky;
+                top: 0;
+                z-index: 99;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            footer.page-footer {
+                background: #373a3c;
+                color: #aaa;
+                text-align: center;
+                padding: 0.6rem;
+                font-size: 0.78rem;
+                margin-left: 240px;
+            }
+    </style>
+
+    @* Permet à chaque page d'ajouter son propre CSS si besoin *@
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    @* ════════ SIDEBAR ════════ *@
+    <div class="sidebar">
+        <div class="brand">✈ TUNISAIR VAB</div>
+
+        <div class="section-label">Principal</div>
+        <nav class="nav flex-column">
+            @if (User.IsInRole("Admin"))
+            {
+                <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">🏠 Tableau de bord</a>
+            }
+            else if (User.IsInRole("Agent"))
+            {
+                <a class="nav-link" asp-controller="Agent" asp-action="Dashboard">🏠 Tableau de bord</a>
+            }
+            else if (User.IsInRole("Catering"))
+            {
+                <a class="nav-link" asp-controller="Catering" asp-action="Dashboard">🏠 Tableau de bord</a>
+            }
+            else if (User.IsInRole("DCF"))
+            {
+                <a class="nav-link" asp-controller="DCF" asp-action="Dashboard">🏠 Tableau de bord</a>
+            }
+        </nav>
+
+        @* Affiché seulement si rôle = Agent *@
+        @if (User.IsInRole("Agent"))
+        {
+            <div class="section-label">Saisie</div>
+            <nav class="nav flex-column">
+                <a class="nav-link" asp-controller="Agent" asp-action="SaisirVentes">📋 État des ventes</a>
+                <a class="nav-link" asp-controller="Agent" asp-action="SaisirOffres">🎁 Offres à bord</a>
+                <a class="nav-link" asp-controller="Agent" asp-action="SaisirVentesFRS">📦 État ventes FRS</a>
+                <a class="nav-link" asp-controller="Agent" asp-action="SaisirOffresFRS">📦 État offres FRS</a>
+            </nav>
+        }
+
+        @* Affiché seulement si rôle = Catering *@
+        @if (User.IsInRole("Catering"))
+        {
+            <div class="section-label">Traitement</div>
+            <nav class="nav flex-column">
+                <a class="nav-link" asp-controller="Catering" asp-action="Controle">🔍 Contrôle Agent/FRS</a>
+                <a class="nav-link" asp-controller="Catering" asp-action="Recapitulatif">📊 Récapitulatif mensuel</a>
+                <a class="nav-link" asp-controller="Catering" asp-action="Commission">💰 Commission PNC</a>
+                <a class="nav-link" asp-controller="Catering" asp-action="Redevance">🧾 Redevance mensuelle</a>
+                <a class="nav-link" asp-controller="Catering" asp-action="ValiderFactures">✅ Valider factures</a>
+            </nav>
+        }
+
+        @* Affiché seulement si rôle = DCF *@
+        @if (User.IsInRole("DCF"))
+        {
+            <div class="section-label">Facturation</div>
+            <nav class="nav flex-column">
+                <a class="nav-link" asp-controller="DCF" asp-action="TrousDeCaisse">⚠️ Trous de caisse</a>
+                <a class="nav-link" asp-controller="DCF" asp-action="Bordereaux">🧾 Bordereaux règlement</a>
+                <a class="nav-link" asp-controller="DCF" asp-action="Archivage">🗄️ Archivage</a>
+            </nav>
+        }
+
+        @* Affiché SEULEMENT si rôle = Admin *@
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="section-label">Administration</div>
+            <nav class="nav flex-column">
+                <a class="nav-link" asp-controller="Admin" asp-action="GestionUsers">👥 Gestion utilisateurs</a>
+            </nav>
+        }
+    </div>
+
+    @* ════════ TOPBAR ════════ *@
+    <div class="topbar">
+        <span class="fw-bold text-dark">@ViewData["Title"]</span>
+        <div class="d-flex align-items-center gap-3">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <span class="badge bg-primary">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                <span class="text-muted small">@User.Identity.Name</span>
+                <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm">Déconnexion</a>
+            }
+        </div>
+    </div>
+
+    @* ════════ CONTENU DE LA PAGE ════════ *@
+    <div class="main-content">
+        @* Messages de confirmation/erreur globaux *@
+        @if (TempData["Succes"] != null)
+        {
+            <div class="alert alert-success">@TempData["Succes"]</div>
+        }
+        @if (TempData["Erreur"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Erreur"]</div>
+        }
+
+        @* C'est ici que le contenu de chaque page (Views/.../Index.cshtml) s'affiche *@
+        @RenderBody()
+    </div>
+
+    <footer class="page-footer">
+        © 2026 TUNISAIR — Système VAB &nbsp;|&nbsp; Direction Catering
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+            

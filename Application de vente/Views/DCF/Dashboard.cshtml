@@ -1,0 +1,102 @@
+@{
+    ViewData["Title"] = "Tableau de bord — DCF";
+    var mois = DateTime.Now.ToString("MMMM yyyy");
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold text-dark mb-0">🏛 Tableau de bord — Direction Centrale Financière</h4>
+        <small class="text-muted">Validation des factures et archivage — Mois : <strong>@mois</strong></small>
+        <hr />
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #d9230f;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">📄</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">Factures en attente</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #4CAF50;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">✅</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">Factures validées</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #FF9800;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">💳</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">Bordereaux à traiter</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #607D8B;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">🗄️</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">Documents archivés</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#d9230f; color:white;">
+                📄 Dernières factures reçues
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <div style="font-size:3rem;">📭</div>
+                    <p class="mt-2">Aucune facture en attente de validation.</p>
+                    <a asp-controller="DCF" asp-action="TrousDeCaisse" class="btn btn-warning btn-sm fw-bold text-dark">
+                        ⚠️ Voir les trous de caisse
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#373a3c; color:white;">⚡ Actions rapides</div>
+            <div class="card-body d-grid gap-2">
+                <a asp-controller="DCF" asp-action="TrousDeCaisse" class="btn btn-warning fw-bold text-dark">
+                    ⚠️ Trous de caisse
+                </a>
+                <a asp-controller="DCF" asp-action="Bordereaux" class="btn btn-outline-secondary">
+                    💳 Bordereaux règlement
+                </a>
+                <a asp-controller="DCF" asp-action="Archivage" class="btn btn-outline-secondary">
+                    🗄️ Archivage documents
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mt-3">
+            <div class="card-header fw-bold bg-warning text-dark">
+                ℹ️ Rappel procédure
+            </div>
+            <div class="card-body">
+                <ol class="small text-muted ps-3 mb-0">
+                    <li class="mb-1">Réceptionner les factures de la DCF</li>
+                    <li class="mb-1">Vérifier et valider avec le Bon à payer</li>
+                    <li class="mb-1">Approuver dans le système ERP</li>
+                    <li class="mb-1">Établir le bordereau de règlement</li>
+                    <li>Archiver les documents finaux</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>

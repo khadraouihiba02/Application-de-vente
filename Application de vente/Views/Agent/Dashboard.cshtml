@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Tableau de bord — Agent";
+    var mois = DateTime.Now.ToString("MMMM yyyy");
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold text-dark mb-0">✈ Tableau de bord Agent — Ventes à Bord</h4>
+        <small class="text-muted">Mois en cours : <strong>@mois</strong></small>
+        <hr />
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #d9230f;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">✈️</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">Vols saisis ce mois</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #2196F3;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">📋</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">États en attente</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #4CAF50;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">✅</div>
+                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="text-muted small">États validés</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #FFC107;">
+            <div class="card-body text-center py-4">
+                <div style="font-size:2.5rem;">💰</div>
+                <div class="fw-bold fs-3 mt-2">0 DT</div>
+                <div class="text-muted small">Commission estimée</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#d9230f; color:white;">
+                📋 Mes derniers états de ventes
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <div style="font-size:3rem;">📭</div>
+                    <p class="mt-2">Aucun état de vente saisi pour le moment.</p>
+                    <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-primary btn-sm fw-bold">
+                        + Saisir un nouvel état
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#373a3c; color:white;">⚡ Saisie rapide</div>
+            <div class="card-body d-grid gap-2">
+                <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-primary fw-bold">
+                    📋 Saisir état des ventes
+                </a>
+                <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-outline-secondary">
+                    🎁 Saisir offres à bord
+                </a>
+                <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-outline-secondary">
+                    📦 État ventes FRS
+                </a>
+                <a asp-controller="Agent" asp-action="SaisirOffresFRS" class="btn btn-outline-secondary">
+                    📦 État offres FRS
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
