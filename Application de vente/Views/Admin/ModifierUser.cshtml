@@ -1,0 +1,69 @@
+@model ApplicationDeVente.Models.ModifierUtilisateurViewModel
+@{
+    ViewData["Title"] = "Modifier l'Utilisateur";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#373a3c; color:white;">
+                ✏️ Modifier l'Utilisateur — <em>@Model.Prenom @Model.Nom</em>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="ModifierUser" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Prenom" class="form-label fw-semibold"></label>
+                            <input asp-for="Prenom" class="form-control" />
+                            <span asp-validation-for="Prenom" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Nom" class="form-label fw-semibold"></label>
+                            <input asp-for="Nom" class="form-control" />
+                            <span asp-validation-for="Nom" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-12">
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="MotDePasse" class="form-label fw-semibold"></label>
+                            <input asp-for="MotDePasse" class="form-control" type="password" placeholder="Laisser vide = pas de changement" />
+                            <span asp-validation-for="MotDePasse" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Role" class="form-label fw-semibold"></label>
+                            <select asp-for="Role" class="form-select" asp-items="ViewBag.Roles">
+                                <option value="">-- Choisir un rôle --</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check form-switch">
+                                <input asp-for="Actif" class="form-check-input" type="checkbox" role="switch" />
+                                <label asp-for="Actif" class="form-check-label fw-semibold">Compte actif</label>
+                            </div>
+                            <small class="text-muted">Désactiver un compte empêche l'utilisateur de se connecter.</small>
+                        </div>
+                    </div>
+
+                    <hr class="mt-4" />
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="GestionUsers" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary fw-bold">💾 Enregistrer les modifications</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

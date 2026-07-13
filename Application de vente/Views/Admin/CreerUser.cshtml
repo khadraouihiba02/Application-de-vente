@@ -1,0 +1,69 @@
+@model ApplicationDeVente.Models.CreerUtilisateurViewModel
+@{
+    ViewData["Title"] = "Créer un Utilisateur";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold" style="background:#d9230f; color:white;">
+                ➕ Créer un Nouvel Utilisateur
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="CreerUser" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Prenom" class="form-label fw-semibold"></label>
+                            <input asp-for="Prenom" class="form-control" placeholder="ex: Hiba" />
+                            <span asp-validation-for="Prenom" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Nom" class="form-label fw-semibold"></label>
+                            <input asp-for="Nom" class="form-control" placeholder="ex: Khadraoui" />
+                            <span asp-validation-for="Nom" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-12">
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <input asp-for="Email" class="form-control" placeholder="ex: hiba.khadraoui@tunisair.com.tn" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="MotDePasse" class="form-label fw-semibold"></label>
+                            <input asp-for="MotDePasse" class="form-control" type="password" placeholder="Min. 6 caractères" />
+                            <span asp-validation-for="MotDePasse" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Role" class="form-label fw-semibold"></label>
+                            <select asp-for="Role" class="form-select" asp-items="ViewBag.Roles">
+                                <option value="">-- Choisir un rôle --</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info small mt-3">
+                        <strong>💡 Rôles disponibles :</strong><br/>
+                        <span class="badge bg-primary me-1">Agent</span> Saisie des ventes à bord<br/>
+                        <span class="badge bg-success me-1">Catering</span> Contrôle et paramétrage<br/>
+                        <span class="badge bg-warning text-dark me-1">DCF</span> Facturation et archivage<br/>
+                        <span class="badge bg-dark me-1">Admin</span> Gestion des utilisateurs uniquement
+                    </div>
+
+                    <hr class="mt-3" />
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="GestionUsers" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary fw-bold">💾 Créer l'utilisateur</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

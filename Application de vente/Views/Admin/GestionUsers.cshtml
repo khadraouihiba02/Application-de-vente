@@ -1,3 +1,4 @@
+@model IEnumerable<ApplicationDeVente.Models.UserWithRoleViewModel>
 @{
     ViewData["Title"] = "Gestion des Utilisateurs";
 }
@@ -5,7 +6,7 @@
 <div class="row g-4 mb-4">
     <div class="col-12">
         <h4 class="fw-bold text-dark mb-0">👥 Gestion des Utilisateurs du Système</h4>
-        <small class="text-muted">Créer, modifier et désactiver les comptes utilisateurs</small>
+        <small class="text-muted">Créer, modifier et activer/désactiver les comptes utilisateurs</small>
         <hr />
     </div>
 </div>
@@ -18,7 +19,7 @@
             <span class="badge bg-warning text-dark me-1">DCF</span>
             <span class="badge bg-dark">Admin</span>
         </div>
-        <a href="#" class="btn btn-primary fw-bold">
+        <a asp-action="CreerUser" class="btn btn-primary fw-bold">
             ➕ Ajouter un utilisateur
         </a>
     </div>
@@ -32,7 +33,6 @@
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
                     <th>Nom complet</th>
                     <th>Email</th>
                     <th>Rôle</th>
@@ -41,50 +41,59 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>Système Administrateur</td>
-                    <td>admin@tunisair.com.tn</td>
-                    <td><span class="badge bg-dark">Admin</span></td>
-                    <td><span class="badge bg-success">Actif</span></td>
-                    <td class="text-center">
-                        <a href="#" class="btn btn-sm btn-outline-primary">✏️ Modifier</a>
-                        <a href="#" class="btn btn-sm btn-outline-danger">🔴 Désactiver</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>Ben Salem</td>
-                    <td>agent@tunisair.com.tn</td>
-                    <td><span class="badge bg-primary">Agent</span></td>
-                    <td><span class="badge bg-success">Actif</span></td>
-                    <td class="text-center">
-                        <a href="#" class="btn btn-sm btn-outline-primary">✏️ Modifier</a>
-                        <a href="#" class="btn btn-sm btn-outline-danger">🔴 Désactiver</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>Ali Chahed</td>
-                    <td>catering@tunisair.com.tn</td>
-                    <td><span class="badge bg-success">Catering</span></td>
-                    <td><span class="badge bg-success">Actif</span></td>
-                    <td class="text-center">
-                        <a href="#" class="btn btn-sm btn-outline-primary">✏️ Modifier</a>
-                        <a href="#" class="btn btn-sm btn-outline-danger">🔴 Désactiver</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>4</td>
-                    <td>Rania Trabelsi</td>
-                    <td>dcf@tunisair.com.tn</td>
-                    <td><span class="badge bg-warning text-dark">DCF</span></td>
-                    <td><span class="badge bg-success">Actif</span></td>
-                    <td class="text-center">
-                        <a href="#" class="btn btn-sm btn-outline-primary">✏️ Modifier</a>
-                        <a href="#" class="btn btn-sm btn-outline-danger">🔴 Désactiver</a>
-                    </td>
-                </tr>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td><strong>@user.NomComplet</strong></td>
+                        <td>@user.Email</td>
+                        <td>
+                            @switch (user.Role)
+                            {
+                                case "Admin":
+                                    <span class="badge bg-dark">Admin</span>
+                                    break;
+                                case "Catering":
+                                    <span class="badge bg-success">Catering</span>
+                                    break;
+                                case "DCF":
+                                    <span class="badge bg-warning text-dark">DCF</span>
+                                    break;
+                                case "Agent":
+                                    <span class="badge bg-primary">Agent</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@user.Role</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @if (user.Actif)
+                            {
+                                <span class="badge bg-success">✅ Actif</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">🔴 Désactivé</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="ModifierUser" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary me-1">✏️ Modifier</a>
+                            
+                            <form asp-action="ToggleStatus" asp-route-id="@user.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Voulez-vous modifier le statut de cet utilisateur ?')">
+                                @Html.AntiForgeryToken()
+                                @if (user.Actif)
+                                {
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">🔴 Désactiver</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-sm btn-outline-success">🟢 Activer</button>
+                                }
+                            </form>
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
