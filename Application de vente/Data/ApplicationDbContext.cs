@@ -10,5 +10,10 @@ namespace ApplicationDeVente.Data
             : base(options)
         {
         }
+
+        public DbSet<Article> Articles { get; set; }
+        public DbSet<Contrat> Contrats { get; set; }
+        public DbSet<PrixArticleContrat> PrixArticleContrats { get; set; }
+        public DbSet<TauxChange> TauxChanges { get; set; }
     }
 }

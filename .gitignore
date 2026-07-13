@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ── Sécurité : fichiers de configuration sensibles ──
+# Contient la chaîne de connexion SQL Server et secrets
+appsettings.json
+appsettings.*.json
+!appsettings.Example.json
