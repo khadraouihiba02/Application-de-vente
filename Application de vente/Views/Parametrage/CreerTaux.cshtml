@@ -24,8 +24,7 @@
                             <label asp-for="DeviseSource" class="form-label fw-semibold"></label>
                             <select asp-for="DeviseSource" class="form-select" id="deviseSourceSelect" onchange="updateCurrencyLabel()">
                                 <option value="EUR">EUR — Euro</option>
-                                <option value="USD">USD — Dollar américain</option>
-                                <option value="GBP">GBP — Livre sterling</option>
+                                <option value="TND">TND — Dinar tunisien</option>
                             </select>
                             <span asp-validation-for="DeviseSource" class="text-danger small"></span>
                         </div>
@@ -34,8 +33,9 @@
                         </div>
                         <div class="col-md-4">
                             <label asp-for="DeviseCible" class="form-label fw-semibold"></label>
-                            <select asp-for="DeviseCible" class="form-select">
+                            <select asp-for="DeviseCible" class="form-select" id="deviseCibleSelect" onchange="updateCurrencyLabel()">
                                 <option value="TND">TND — Dinar tunisien</option>
+                                <option value="EUR">EUR — Euro</option>
                             </select>
                             <span asp-validation-for="DeviseCible" class="text-danger small"></span>
                         </div>
@@ -45,7 +45,7 @@
                             <div class="input-group">
                                 <span class="input-group-text" id="currencyLabel">1 EUR =</span>
                                 <input asp-for="Taux" type="number" lang="en" class="form-control" placeholder="ex: 3.3800" step="0.0001" />
-                                <span class="input-group-text">TND</span>
+                                <span class="input-group-text" id="currencyCibleLabel">TND</span>
                             </div>
                             <span asp-validation-for="Taux" class="text-danger small"></span>
                         </div>
@@ -77,8 +77,11 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
         function updateCurrencyLabel() {
-            var selectedDevise = document.getElementById("deviseSourceSelect").value;
-            document.getElementById("currencyLabel").innerText = "1 " + selectedDevise + " =";
+            var selectedDeviseSource = document.getElementById("deviseSourceSelect").value;
+            var selectedDeviseCible = document.getElementById("deviseCibleSelect").value;
+            
+            document.getElementById("currencyLabel").innerText = "1 " + selectedDeviseSource + " =";
+            document.getElementById("currencyCibleLabel").innerText = selectedDeviseCible;
         }
         
         // Exécuter au chargement pour s'assurer que le texte est correct

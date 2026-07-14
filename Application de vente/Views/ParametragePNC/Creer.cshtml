@@ -1,0 +1,51 @@
+@model ApplicationDeVente.Models.PNC
+@{
+    ViewData["Title"] = "Nouveau PNC";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold text-white" style="background:#d9230f;">
+                👨‍✈️ Ajouter un PNC
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Creer" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label asp-for="Matricule" class="form-label fw-semibold"></label>
+                            <input asp-for="Matricule" class="form-control" placeholder="ex: 15070F" />
+                            <span asp-validation-for="Matricule" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Nom" class="form-label fw-semibold"></label>
+                            <input asp-for="Nom" class="form-control" placeholder="ex: BEN SALEM" />
+                            <span asp-validation-for="Nom" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Prenom" class="form-label fw-semibold"></label>
+                            <input asp-for="Prenom" class="form-control" placeholder="ex: KAIS" />
+                            <span asp-validation-for="Prenom" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check form-switch">
+                                <input asp-for="Actif" class="form-check-input" type="checkbox" />
+                                <label asp-for="Actif" class="form-check-label">PNC Actif (peut être assigné à un vol)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="mt-4" />
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-danger fw-bold">💾 Enregistrer le PNC</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

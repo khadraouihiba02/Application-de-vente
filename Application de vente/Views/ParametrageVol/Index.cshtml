@@ -1,0 +1,131 @@
+@model IEnumerable<ApplicationDeVente.Models.Vol>
+@{
+    ViewData["Title"] = "Gestion des Vols";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="fw-bold mb-0">✈️ Liste des Vols</h4>
+        <small class="text-muted">Vols réguliers enregistrés dans le système.</small>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-success fw-bold" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-file-earmark-excel"></i> 📥 Importer Excel
+        </button>
+        <a asp-action="Creer" class="btn btn-danger fw-bold">+ Nouveau Vol</a>
+    </div>
+</div>
+
+<!-- Modal Import Excel -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="ImporterExcel" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-success" id="importModalLabel">📥 Importer depuis Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        <strong>Étape 1 :</strong> <a asp-action="TelechargerModele" class="fw-bold text-decoration-none">Téléchargez le modèle Excel</a><br/>
+                        <strong>Étape 2 :</strong> Remplissez-le avec vos vols (N° Vol, Origine, Destination)<br/>
+                        <strong>Étape 3 :</strong> Chargez le fichier ci-dessous.
+                    </div>
+                    <div class="mb-3">
+                        <label for="fichierExcel" class="form-label fw-semibold">Fichier Excel (.xlsx)</label>
+                        <input type="file" class="form-control" id="fichierExcel" name="fichierExcel" accept=".xlsx" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success fw-bold">Importer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header fw-bold text-white" style="background:#d9230f;">
+        🗂 Liste des Vols (@Model.Count() enregistrements)
+    </div>
+
+    <form asp-action="ActionEnMasse" method="post" id="formActionMasse">
+        @Html.AntiForgeryToken()
+        <div class="p-2 bg-light border-bottom d-flex gap-2 align-items-center">
+            <span class="fw-semibold ms-2">Actions sur la sélection :</span>
+            <button type="submit" name="actionType" value="Activer" class="btn btn-sm btn-outline-success">✅ Activer</button>
+            <button type="submit" name="actionType" value="Desactiver" class="btn btn-sm btn-outline-warning">🚫 Désactiver</button>
+            <button type="submit" name="actionType" value="Supprimer" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer les vols sélectionnés ?');">🗑️ Supprimer</button>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40px;" class="text-center">
+                            <input type="checkbox" id="selectAll" class="form-check-input" />
+                        </th>
+                        <th>N° Vol</th>
+                        <th>Origine</th>
+                        <th>Destination</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4">Aucun vol enregistré.</td></tr>
+                    }
+                    @foreach (var vol in Model)
+                    {
+                        <tr>
+                            <td class="text-center align-middle">
+                                <input type="checkbox" name="ids" value="@vol.Id" class="form-check-input chk-vol" />
+                            </td>
+                            <td class="align-middle"><span class="badge bg-primary fs-6">@vol.NumeroVol</span></td>
+                            <td class="fw-semibold align-middle">@vol.Origine</td>
+                            <td class="fw-semibold align-middle">@vol.Destination</td>
+                            <td class="text-center align-middle">
+                                @if (vol.Actif)
+                                {
+                                    <span class="badge bg-success">✅ Actif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">⏹ Inactif</span>
+                                }
+                            </td>
+                            <td class="text-end align-middle">
+                                <a asp-action="Modifier" asp-route-id="@vol.Id" class="btn btn-sm btn-outline-primary me-1">✏️ Modifier</a>
+                                <button type="submit" form="formToggle_@vol.Id" class="btn btn-sm @(vol.Actif ? "btn-outline-warning" : "btn-outline-success") me-1">
+                                    @(vol.Actif ? "🚫 Désactiver" : "✅ Activer")
+                                </button>
+                                <button type="submit" form="formSupprimer_@vol.Id" class="btn btn-sm btn-outline-danger">🗑️ Supprimer</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </form>
+</div>
+
+@foreach(var vol in Model)
+{
+    <form asp-action="ToggleActif" asp-route-id="@vol.Id" method="post" id="formToggle_@vol.Id" class="d-none">@Html.AntiForgeryToken()</form>
+    <form asp-action="Supprimer" asp-route-id="@vol.Id" method="post" id="formSupprimer_@vol.Id" class="d-none" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce Vol ?');">@Html.AntiForgeryToken()</form>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('selectAll').addEventListener('change', function (e) {
+            var checkboxes = document.querySelectorAll('.chk-vol');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = e.target.checked;
+            }
+        });
+    </script>
+}

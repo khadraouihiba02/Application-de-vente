@@ -1,0 +1,54 @@
+@model ApplicationDeVente.Models.Vol
+@{
+    ViewData["Title"] = "Nouveau Vol";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold text-white" style="background:#d9230f;">
+                ✈️ Ajouter un Vol
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info small">
+                    <strong>💡 Info :</strong> Saisissez le numéro de vol officiel Tunisair (ex: TU202) avec ses aéroports d'origine et de destination (codes IATA à 3 lettres).
+                </div>
+                <form asp-action="Creer" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label asp-for="NumeroVol" class="form-label fw-semibold"></label>
+                            <input asp-for="NumeroVol" class="form-control" placeholder="ex: TU202" style="text-transform:uppercase;" />
+                            <span asp-validation-for="NumeroVol" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Origine" class="form-label fw-semibold"></label>
+                            <input asp-for="Origine" class="form-control" placeholder="ex: TUN" style="text-transform:uppercase;" maxlength="5" />
+                            <span asp-validation-for="Origine" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Destination" class="form-label fw-semibold"></label>
+                            <input asp-for="Destination" class="form-control" placeholder="ex: CDG" style="text-transform:uppercase;" maxlength="5" />
+                            <span asp-validation-for="Destination" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check form-switch">
+                                <input asp-for="Actif" class="form-check-input" type="checkbox" />
+                                <label asp-for="Actif" class="form-check-label">Vol Actif</label>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="mt-4" />
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-danger fw-bold">💾 Enregistrer le Vol</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

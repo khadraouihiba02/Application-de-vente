@@ -14,5 +14,41 @@ namespace ApplicationDeVente.Data
         // Module Paramétrage
         public DbSet<Article> Articles { get; set; }
         public DbSet<TauxChange> TauxChanges { get; set; }
+        public DbSet<PNC> PNCs { get; set; }
+        public DbSet<Vol> Vols { get; set; }
+
+        // Module Saisie des Ventes
+        public DbSet<EtatDesVentes> EtatsDesVentes { get; set; }
+        public DbSet<LigneVente> LignesVentes { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            // Configuration de la précision des décimales
+            builder.Entity<TauxChange>()
+                .Property(t => t.Taux)
+                .HasColumnType("decimal(18,4)");
+
+            builder.Entity<Article>()
+                .Property(a => a.PrixUnitaire)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<EtatDesVentes>()
+                .Property(e => e.ChiffreAffairesEUR)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<EtatDesVentes>()
+                .Property(e => e.MontantEncaisseTND)
+                .HasColumnType("decimal(18,3)"); // Le TND utilise 3 décimales
+
+            builder.Entity<EtatDesVentes>()
+                .Property(e => e.TauxChangeApplique)
+                .HasColumnType("decimal(18,4)");
+
+            builder.Entity<LigneVente>()
+                .Property(l => l.PrixUnitaireEUR)
+                .HasColumnType("decimal(18,2)");
+        }
     }
 }

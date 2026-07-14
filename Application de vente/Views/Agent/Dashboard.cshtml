@@ -1,3 +1,4 @@
+@model ApplicationDeVente.Models.ViewModels.AgentDashboardViewModel
 @{
     ViewData["Title"] = "Tableau de bord — Agent";
     var mois = DateTime.Now.ToString("MMMM yyyy");
@@ -16,7 +17,7 @@
         <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #d9230f;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">✈️</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2">@Model.VolsSaisisCeMois</div>
                 <div class="text-muted small">Vols saisis ce mois</div>
             </div>
         </div>
@@ -25,7 +26,7 @@
         <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #2196F3;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">📋</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2">@Model.EtatsEnAttente</div>
                 <div class="text-muted small">États en attente</div>
             </div>
         </div>
@@ -34,7 +35,7 @@
         <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #4CAF50;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">✅</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2">@Model.EtatsValides</div>
                 <div class="text-muted small">États validés</div>
             </div>
         </div>
@@ -43,8 +44,8 @@
         <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #FFC107;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">💰</div>
-                <div class="fw-bold fs-3 mt-2">0 DT</div>
-                <div class="text-muted small">Commission estimée</div>
+                <div class="fw-bold fs-3 mt-2">@Model.CommissionEstimee.ToString("F3") TND</div>
+                <div class="text-muted small">Commission estimée (PNC)</div>
             </div>
         </div>
     </div>
@@ -53,34 +54,80 @@
 <div class="row g-4">
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
-            <div class="card-header fw-bold" style="background:#d9230f; color:white;">
-                📋 Mes derniers états de ventes
+            <div class="card-header fw-bold text-white" style="background:#d9230f;">
+                📋 Mes dernières saisies d'états de ventes
             </div>
-            <div class="card-body">
-                <div class="text-center text-muted py-4">
-                    <div style="font-size:3rem;">📭</div>
-                    <p class="mt-2">Aucun état de vente saisi pour le moment.</p>
-                    <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-primary btn-sm fw-bold">
-                        + Saisir un nouvel état
-                    </a>
-                </div>
+            <div class="card-body p-0">
+                @if (!Model.DerniersEtats.Any())
+                {
+                    <div class="text-center text-muted py-5">
+                        <div style="font-size:3rem;">📭</div>
+                        <p class="mt-2">Aucun état de vente saisi pour le moment.</p>
+                        <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-danger btn-sm fw-bold">
+                            + Saisir un nouvel état
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N° FL</th>
+                                    <th>Date</th>
+                                    <th>Vol</th>
+                                    <th>PNC Vendeur</th>
+                                    <th class="text-end">Total EUR</th>
+                                    <th class="text-center">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.DerniersEtats)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-secondary fs-6">@item.NumeroFeuilleLigne</span></td>
+                                        <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.Vol?.NumeroVol</td>
+                                        <td class="fw-semibold">@item.PNCVendeur?.Nom @item.PNCVendeur?.Prenom</td>
+                                        <td class="text-end fw-bold text-primary">@item.ChiffreAffairesEUR.ToString("F2") €</td>
+                                        <td class="text-center">
+                                            @if (item.Statut == "Saisi")
+                                            {
+                                                <span class="badge bg-warning text-dark">⏳ Saisi</span>
+                                            }
+                                            else if (item.Statut == "Contrôlé")
+                                            {
+                                                <span class="badge bg-info text-dark">🔍 Contrôlé</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">✅ Clôturé</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
-            <div class="card-header fw-bold" style="background:#373a3c; color:white;">⚡ Saisie rapide</div>
+            <div class="card-header fw-bold text-white" style="background:#373a3c;">⚡ Saisie rapide</div>
             <div class="card-body d-grid gap-2">
-                <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-primary fw-bold">
+                <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-danger fw-bold">
                     📋 Saisir état des ventes
                 </a>
-                <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-outline-secondary">
+                <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-outline-secondary disabled" style="cursor: not-allowed;">
                     🎁 Saisir offres à bord
                 </a>
-                <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-outline-secondary">
+                <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-outline-secondary disabled" style="cursor: not-allowed;">
                     📦 État ventes FRS
                 </a>
-                <a asp-controller="Agent" asp-action="SaisirOffresFRS" class="btn btn-outline-secondary">
+                <a asp-controller="Agent" asp-action="SaisirOffresFRS" class="btn btn-outline-secondary disabled" style="cursor: not-allowed;">
                     📦 État offres FRS
                 </a>
             </div>
