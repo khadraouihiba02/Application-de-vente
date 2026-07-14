@@ -9,5 +9,6 @@ namespace ApplicationDeVente.Models.ViewModels
         public int EtatsValides { get; set; } = 0;
         public decimal CommissionEstimee { get; set; } = 0;
         public List<EtatDesVentes> DerniersEtats { get; set; } = new();
+        public List<EtatDesOffres> DerniersEtatsOffres { get; set; } = new();
     }
 }

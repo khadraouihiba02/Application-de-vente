@@ -1,0 +1,163 @@
+@model ApplicationDeVente.Models.ViewModels.SaisieOffresViewModel
+@{
+    ViewData["Title"] = "Saisie des Offres à bord";
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h4 class="fw-bold mb-0">🎁 Nouvelle Saisie d'État des Offres à bord</h4>
+        <small class="text-muted">Saisissez les articles offerts ou vendus à prix promotionnel (prix promo = 0 € pour un cadeau gratuit).</small>
+    </div>
+</div>
+
+<form asp-action="SaisirOffres" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-bold text-white" style="background:#373a3c;">
+            ✈️ En-tête de la Feuille de Ligne (FL)
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="NumeroFeuilleLigne" class="form-label fw-semibold"></label>
+                    <input asp-for="NumeroFeuilleLigne" class="form-control" placeholder="ex: FL12345" style="text-transform: uppercase;" required />
+                    <span asp-validation-for="NumeroFeuilleLigne" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="DateVol" class="form-label fw-semibold"></label>
+                    <input type="date" name="DateVol" id="DateVol" class="form-control" value="@Model.DateVol.ToString("yyyy-MM-dd")" required />
+                    <span asp-validation-for="DateVol" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="VolId" class="form-label fw-semibold"></label>
+                    <select asp-for="VolId" asp-items="Model.VolsDisponibles" class="form-select" required>
+                        <option value="">-- Sélectionner --</option>
+                    </select>
+                    <span asp-validation-for="VolId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PNCVendeurId" class="form-label fw-semibold"></label>
+                    <select asp-for="PNCVendeurId" asp-items="Model.PNCsDisponibles" class="form-select" required>
+                        <option value="">-- Sélectionner --</option>
+                    </select>
+                    <span asp-validation-for="PNCVendeurId" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <input type="hidden" asp-for="TauxChangeApplique" id="tauxApplique" value="@Model.TauxChangeApplique.ToString("F4", System.Globalization.CultureInfo.InvariantCulture)" />
+            <div class="alert alert-light border mt-3 mb-0 d-flex justify-content-between align-items-center p-2">
+                <span class="small text-muted">💱 Taux de change appliqué : <strong class="text-dark">1 EUR = @Model.TauxChangeApplique.ToString("F4") TND</strong></span>
+                <span class="small text-info">💡 Prix Promo = <strong>0 €</strong> pour un article offert gratuitement</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-bold text-white d-flex justify-content-between align-items-center" style="background:#373a3c;">
+            <span>🎁 Grille des Offres / Promotions</span>
+            <small class="text-white-50">Prix catalogue affiché pour référence</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="offresTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 12%;">Code</th>
+                        <th style="width: 28%;">Désignation</th>
+                        <th class="text-center" style="width: 12%;">Prix Catalogue (€)</th>
+                        <th class="text-center" style="width: 10%;">Dotation</th>
+                        <th class="text-center" style="width: 10%;">Complément</th>
+                        <th class="text-center" style="width: 10%;">Qté Offerte</th>
+                        <th class="text-center" style="width: 10%;">Prix Promo (€)</th>
+                        <th class="text-end" style="width: 8%;">Total (€)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.LignesArticles.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                <input type="hidden" asp-for="LignesArticles[i].ArticleId" />
+                                <input type="hidden" asp-for="LignesArticles[i].CodeArticle" />
+                                <input type="hidden" asp-for="LignesArticles[i].Designation" />
+                                <input type="hidden" asp-for="LignesArticles[i].PrixCatalogueEUR" class="val-catalogue" value="@Model.LignesArticles[i].PrixCatalogueEUR.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" />
+                                <span class="badge bg-secondary">@Model.LignesArticles[i].CodeArticle</span>
+                            </td>
+                            <td class="fw-semibold text-dark">@Model.LignesArticles[i].Designation</td>
+                            <td class="text-center text-muted small">
+                                @Model.LignesArticles[i].PrixCatalogueEUR.ToString("F2") €
+                            </td>
+                            <td class="text-center">
+                                <input type="number" min="0" asp-for="LignesArticles[i].QuantiteDotation" class="form-control form-control-sm text-center" style="max-width: 80px; margin: 0 auto;" />
+                            </td>
+                            <td class="text-center">
+                                <input type="number" min="0" asp-for="LignesArticles[i].QuantiteCompl" class="form-control form-control-sm text-center" style="max-width: 80px; margin: 0 auto;" />
+                            </td>
+                            <td class="text-center">
+                                <input type="number" min="0" asp-for="LignesArticles[i].QuantiteOfferte" class="form-control form-control-sm text-center fw-bold text-success val-offerte" style="max-width: 80px; margin: 0 auto;" />
+                            </td>
+                            <td class="text-center">
+                                <input type="number" min="0" step="0.01" asp-for="LignesArticles[i].PrixUnitairePromoEUR" class="form-control form-control-sm text-center text-warning fw-bold val-promo" style="max-width: 90px; margin: 0 auto;" value="@Model.LignesArticles[i].PrixUnitairePromoEUR.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" />
+                            </td>
+                            <td class="text-end fw-bold val-total-ligne" style="color: #2c3e50;">0.00 €</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Panneau de résumé -->
+    <div class="row g-3 justify-content-end mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total Offres (EUR) :</span>
+                        <span class="fw-bold fs-5 text-warning" id="totalEur">0.00 €</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Équivalent (TND) :</span>
+                        <span class="fw-bold fs-5 text-success" id="totalTnd">0.000 TND</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">Annuler</a>
+        <button type="submit" class="btn fw-bold px-4" style="background:#373a3c; color:white;">🎁 Enregistrer les offres</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const taux = parseFloat(document.getElementById("tauxApplique").value) || 1.0;
+
+            function recalculerTout() {
+                let totalEur = 0;
+                const rows = document.querySelectorAll("#offresTable tbody tr");
+
+                rows.forEach(row => {
+                    const qteOfferte = parseInt(row.querySelector(".val-offerte").value) || 0;
+                    const prixPromo = parseFloat(row.querySelector(".val-promo").value) || 0.0;
+                    const totalLigne = qteOfferte * prixPromo;
+                    row.querySelector(".val-total-ligne").textContent = totalLigne.toFixed(2) + " €";
+                    totalEur += totalLigne;
+                });
+
+                document.getElementById("totalEur").textContent = totalEur.toFixed(2) + " €";
+                document.getElementById("totalTnd").textContent = (totalEur * taux).toFixed(3) + " TND";
+            }
+
+            document.querySelectorAll(".val-offerte, .val-promo").forEach(input => {
+                input.addEventListener("input", recalculerTout);
+            });
+
+            recalculerTout();
+        });
+    </script>
+}

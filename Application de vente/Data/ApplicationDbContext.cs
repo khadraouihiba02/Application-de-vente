@@ -21,6 +21,10 @@ namespace ApplicationDeVente.Data
         public DbSet<EtatDesVentes> EtatsDesVentes { get; set; }
         public DbSet<LigneVente> LignesVentes { get; set; }
 
+        // Module Saisie des Offres
+        public DbSet<EtatDesOffres> EtatsDesOffres { get; set; }
+        public DbSet<LigneOffre> LignesOffres { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -48,6 +52,22 @@ namespace ApplicationDeVente.Data
 
             builder.Entity<LigneVente>()
                 .Property(l => l.PrixUnitaireEUR)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<EtatDesOffres>()
+                .Property(e => e.ChiffreAffairesEUR)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<EtatDesOffres>()
+                .Property(e => e.MontantEncaisseTND)
+                .HasColumnType("decimal(18,3)");
+
+            builder.Entity<EtatDesOffres>()
+                .Property(e => e.TauxChangeApplique)
+                .HasColumnType("decimal(18,4)");
+
+            builder.Entity<LigneOffre>()
+                .Property(l => l.PrixUnitairePromoEUR)
                 .HasColumnType("decimal(18,2)");
         }
     }

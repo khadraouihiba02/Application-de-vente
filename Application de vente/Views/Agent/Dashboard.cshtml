@@ -114,6 +114,69 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Tableau des dernières Offres -->
+<div class="row g-4 mt-2">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold text-white" style="background:#373a3c;">
+                🎁 Mes dernières saisies d'offres à bord
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.DerniersEtatsOffres.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        <div style="font-size:2.5rem;">🎁</div>
+                        <p class="mt-2 small">Aucune offre saisie pour le moment.</p>
+                        <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-secondary btn-sm fw-bold">
+                            + Saisir des offres
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N° FL</th>
+                                    <th>Date</th>
+                                    <th>Vol</th>
+                                    <th>PNC Vendeur</th>
+                                    <th class="text-end">Valeur Offres (€)</th>
+                                    <th class="text-center">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.DerniersEtatsOffres)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-dark">@item.NumeroFeuilleLigne</span></td>
+                                        <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.Vol?.NumeroVol</td>
+                                        <td class="fw-semibold">@item.PNCVendeur?.Nom @item.PNCVendeur?.Prenom</td>
+                                        <td class="text-end fw-bold text-warning">@item.ChiffreAffairesEUR.ToString("F2") €</td>
+                                        <td class="text-center">
+                                            @if (item.Statut == "Saisi")
+                                            {
+                                                <span class="badge bg-warning text-dark">⏳ Saisi</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">✅ Clôturé</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
             <div class="card-header fw-bold text-white" style="background:#373a3c;">⚡ Saisie rapide</div>
@@ -121,7 +184,7 @@
                 <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-danger fw-bold">
                     📋 Saisir état des ventes
                 </a>
-                <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-outline-secondary disabled" style="cursor: not-allowed;">
+                <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-outline-secondary">
                     🎁 Saisir offres à bord
                 </a>
                 <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-outline-secondary disabled" style="cursor: not-allowed;">

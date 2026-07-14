@@ -43,8 +43,16 @@ namespace ApplicationDeVente.Controllers
                 .SumAsync(e => e.MontantEncaisseTND);
             vm.CommissionEstimee = totalTndSaisi * 0.05m; // 5% estimé
 
-            // Charger les 5 dernières saisies
+            // Charger les 5 dernières saisies de ventes
             vm.DerniersEtats = await _db.EtatsDesVentes
+                .Include(e => e.Vol)
+                .Include(e => e.PNCVendeur)
+                .OrderByDescending(e => e.Id)
+                .Take(5)
+                .ToListAsync();
+
+            // Charger les 5 dernières saisies d'offres
+            vm.DerniersEtatsOffres = await _db.EtatsDesOffres
                 .Include(e => e.Vol)
                 .Include(e => e.PNCVendeur)
                 .OrderByDescending(e => e.Id)
@@ -159,6 +167,93 @@ namespace ApplicationDeVente.Controllers
             await _db.SaveChangesAsync();
 
             TempData["Succes"] = $"L'état des ventes pour la FL {vm.NumeroFeuilleLigne} a été enregistré avec succès (Total : {totalEur:F2} €).";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        // ── Saisie des Offres à bord ─────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> SaisirOffres()
+        {
+            var vm = new SaisieOffresViewModel();
+            var aujourdhui = DateTime.Today;
+
+            vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif)
+                .Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination})" })
+                .ToListAsync();
+
+            vm.PNCsDisponibles = await _db.PNCs.Where(p => p.Actif)
+                .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" })
+                .ToListAsync();
+
+            var tauxActif = await _db.TauxChanges
+                .Where(t => t.DeviseCible == "TND" && aujourdhui >= t.DateDebut && aujourdhui <= t.DateFin)
+                .OrderByDescending(t => t.Id)
+                .FirstOrDefaultAsync();
+            vm.TauxChangeApplique = tauxActif?.Taux ?? 3.4000m;
+
+            var articles = await _db.Articles
+                .Where(a => aujourdhui >= a.DateDebut && aujourdhui <= a.DateFin)
+                .OrderBy(a => a.NomArticle)
+                .ToListAsync();
+
+            foreach (var article in articles)
+            {
+                vm.LignesArticles.Add(new LigneSaisieOffre
+                {
+                    ArticleId = article.Id,
+                    CodeArticle = article.CodeArticle,
+                    Designation = article.NomArticle,
+                    PrixCatalogueEUR = article.PrixUnitaire,
+                    PrixUnitairePromoEUR = 0 // gratuit par défaut
+                });
+            }
+
+            return View(vm);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaisirOffres(SaisieOffresViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination})" }).ToListAsync();
+                vm.PNCsDisponibles = await _db.PNCs.Where(p => p.Actif).Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" }).ToListAsync();
+                return View(vm);
+            }
+
+            // On ne garde que les lignes avec une quantité offerte > 0
+            var lignesFiltrees = vm.LignesArticles.Where(l => l.QuantiteOfferte > 0).ToList();
+
+            decimal totalEur = lignesFiltrees.Sum(l => l.QuantiteOfferte * l.PrixUnitairePromoEUR);
+
+            var etatOffres = new EtatDesOffres
+            {
+                NumeroFeuilleLigne = vm.NumeroFeuilleLigne,
+                DateVol = vm.DateVol,
+                VolId = vm.VolId,
+                PNCVendeurId = vm.PNCVendeurId,
+                TauxChangeApplique = vm.TauxChangeApplique,
+                ChiffreAffairesEUR = totalEur,
+                MontantEncaisseTND = totalEur * vm.TauxChangeApplique,
+                Statut = "Saisi"
+            };
+
+            foreach (var ligne in lignesFiltrees)
+            {
+                etatOffres.Lignes.Add(new LigneOffre
+                {
+                    ArticleId = ligne.ArticleId,
+                    QuantiteDotation = ligne.QuantiteDotation,
+                    QuantiteCompl = ligne.QuantiteCompl,
+                    QuantiteOfferte = ligne.QuantiteOfferte,
+                    PrixUnitairePromoEUR = ligne.PrixUnitairePromoEUR
+                });
+            }
+
+            _db.EtatsDesOffres.Add(etatOffres);
+            await _db.SaveChangesAsync();
+
+            TempData["Succes"] = $"L'état des offres pour la FL {vm.NumeroFeuilleLigne} a été enregistré avec succès ({lignesFiltrees.Count} article(s) offert(s)).";
             return RedirectToAction(nameof(Dashboard));
         }
     }
