@@ -15,15 +15,20 @@ namespace ApplicationDeVente.Models.ViewModels
         [Display(Name = "Date du Vol")]
         public DateTime DateVol { get; set; } = DateTime.Today;
 
-        [Required(ErrorMessage = "Veuillez sélectionner un vol.")]
-        [Display(Name = "Vol")]
-        public int VolId { get; set; }
+        [Required(ErrorMessage = "Veuillez sélectionner au moins un vol.")]
+        [Display(Name = "Vols de la rotation")]
+        public int[] VolsIds { get; set; } = Array.Empty<int>();
 
         [Required(ErrorMessage = "Veuillez sélectionner le PNC vendeur.")]
         [Display(Name = "PNC Vendeur")]
         public int PNCVendeurId { get; set; }
 
         public decimal TauxChangeApplique { get; set; } = 1;
+
+        [Required(ErrorMessage = "Le montant encaissé réel est obligatoire.")]
+        [Display(Name = "Montant Encaissé (TND)")]
+        [DisplayFormat(DataFormatString = "{0:F3}")]
+        public decimal MontantEncaisseReel { get; set; } = 0;
 
         // ── Listes pour les menus déroulants ──
         public List<SelectListItem> VolsDisponibles { get; set; } = new();

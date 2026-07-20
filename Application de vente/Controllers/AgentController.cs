@@ -45,7 +45,7 @@ namespace ApplicationDeVente.Controllers
 
             // Charger les 5 dernières saisies de ventes
             vm.DerniersEtats = await _db.EtatsDesVentes
-                .Include(e => e.Vol)
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
                 .Include(e => e.PNCVendeur)
                 .OrderByDescending(e => e.Id)
                 .Take(5)
@@ -53,8 +53,7 @@ namespace ApplicationDeVente.Controllers
 
             // Charger les 5 dernières saisies d'offres
             vm.DerniersEtatsOffres = await _db.EtatsDesOffres
-                .Include(e => e.Vol)
-                .Include(e => e.PNCVendeur)
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
                 .OrderByDescending(e => e.Id)
                 .Take(5)
                 .ToListAsync();
@@ -71,49 +70,26 @@ namespace ApplicationDeVente.Controllers
         public async Task<IActionResult> SaisirVentes()
         {
             var vm = new SaisieVentesViewModel();
-
-            // Remplir les listes déroulantes
-            vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif)
-                .Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination})" })
-                .ToListAsync();
-
-            vm.PNCsDisponibles = await _db.PNCs.Where(p => p.Actif)
-                .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" })
-                .ToListAsync();
-
-            // Obtenir le taux de change actif (EUR vers TND par exemple) pour la date d'aujourd'hui
             var aujourdhui = DateTime.Today;
+
+            // Vols disponibles (actifs, à partir de la date du jour ou récents)
+            vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif)
+                .Select(v => new SelectListItem 
+                { 
+                    Value = v.Id.ToString(), 
+                    Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" 
+                })
+                .ToListAsync();
+
             var tauxActif = await _db.TauxChanges
                 .Where(t => t.DeviseCible == "TND" && aujourdhui >= t.DateDebut && aujourdhui <= t.DateFin)
                 .OrderByDescending(t => t.Id)
                 .FirstOrDefaultAsync();
-                
-            if (tauxActif != null)
-            {
-                vm.TauxChangeApplique = tauxActif.Taux;
-            }
-            else
-            {
-                // Taux par défaut si non paramétré
-                vm.TauxChangeApplique = 3.4000m; 
-            }
+            vm.TauxChangeApplique = tauxActif?.Taux ?? 3.4000m;
 
-            // Précharger le catalogue d'articles actifs aujourd'hui
-            var articles = await _db.Articles
-                .Where(a => aujourdhui >= a.DateDebut && aujourdhui <= a.DateFin)
-                .OrderBy(a => a.NomArticle)
-                .ToListAsync();
-                
-            foreach (var article in articles)
-            {
-                vm.LignesArticles.Add(new LigneSaisieArticle
-                {
-                    ArticleId = article.Id,
-                    CodeArticle = article.CodeArticle,
-                    Designation = article.NomArticle,
-                    PrixUnitaireEUR = article.PrixUnitaire
-                });
-            }
+            // La grille des articles est vide au départ
+            vm.LignesArticles = new List<LigneSaisieArticle>();
+            vm.PNCsDisponibles = new List<SelectListItem>(); // Rempli via AJAX
 
             return View(vm);
         }
@@ -143,7 +119,6 @@ namespace ApplicationDeVente.Controllers
             {
                 NumeroFeuilleLigne = vm.NumeroFeuilleLigne,
                 DateVol = vm.DateVol,
-                VolId = vm.VolId,
                 PNCVendeurId = vm.PNCVendeurId,
                 TauxChangeApplique = vm.TauxChangeApplique,
                 ChiffreAffairesEUR = totalEur,
@@ -178,11 +153,7 @@ namespace ApplicationDeVente.Controllers
             var aujourdhui = DateTime.Today;
 
             vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif)
-                .Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination})" })
-                .ToListAsync();
-
-            vm.PNCsDisponibles = await _db.PNCs.Where(p => p.Actif)
-                .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" })
+                .Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" })
                 .ToListAsync();
 
             var tauxActif = await _db.TauxChanges
@@ -191,22 +162,7 @@ namespace ApplicationDeVente.Controllers
                 .FirstOrDefaultAsync();
             vm.TauxChangeApplique = tauxActif?.Taux ?? 3.4000m;
 
-            var articles = await _db.Articles
-                .Where(a => aujourdhui >= a.DateDebut && aujourdhui <= a.DateFin)
-                .OrderBy(a => a.NomArticle)
-                .ToListAsync();
-
-            foreach (var article in articles)
-            {
-                vm.LignesArticles.Add(new LigneSaisieOffre
-                {
-                    ArticleId = article.Id,
-                    CodeArticle = article.CodeArticle,
-                    Designation = article.NomArticle,
-                    PrixCatalogueEUR = article.PrixUnitaire,
-                    PrixUnitairePromoEUR = 0 // gratuit par défaut
-                });
-            }
+            vm.LignesArticles = new List<LigneSaisieOffre>();
 
             return View(vm);
         }
@@ -214,15 +170,15 @@ namespace ApplicationDeVente.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> SaisirOffres(SaisieOffresViewModel vm)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || vm.VolsIds == null || vm.VolsIds.Length == 0)
             {
-                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination})" }).ToListAsync();
-                vm.PNCsDisponibles = await _db.PNCs.Where(p => p.Actif).Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" }).ToListAsync();
+                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" }).ToListAsync();
+                if(vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieOffre>();
                 return View(vm);
             }
 
-            // On ne garde que les lignes avec une quantité offerte > 0
-            var lignesFiltrees = vm.LignesArticles.Where(l => l.QuantiteOfferte > 0).ToList();
+            // On ne garde que les lignes valides saisies par l'agent
+            var lignesFiltrees = vm.LignesArticles.Where(l => l.ArticleId > 0).ToList();
 
             decimal totalEur = lignesFiltrees.Sum(l => l.QuantiteOfferte * l.PrixUnitairePromoEUR);
 
@@ -230,13 +186,16 @@ namespace ApplicationDeVente.Controllers
             {
                 NumeroFeuilleLigne = vm.NumeroFeuilleLigne,
                 DateVol = vm.DateVol,
-                VolId = vm.VolId,
-                PNCVendeurId = vm.PNCVendeurId,
                 TauxChangeApplique = vm.TauxChangeApplique,
                 ChiffreAffairesEUR = totalEur,
                 MontantEncaisseTND = totalEur * vm.TauxChangeApplique,
                 Statut = "Saisi"
             };
+
+            foreach (var volId in vm.VolsIds)
+            {
+                etatOffres.VolsList.Add(new EtatDesOffresVol { VolId = volId });
+            }
 
             foreach (var ligne in lignesFiltrees)
             {
@@ -253,8 +212,51 @@ namespace ApplicationDeVente.Controllers
             _db.EtatsDesOffres.Add(etatOffres);
             await _db.SaveChangesAsync();
 
-            TempData["Succes"] = $"L'état des offres pour la FL {vm.NumeroFeuilleLigne} a été enregistré avec succès ({lignesFiltrees.Count} article(s) offert(s)).";
+            TempData["Succes"] = $"L'état des offres pour la FL {vm.NumeroFeuilleLigne} a été enregistré avec succès.";
             return RedirectToAction(nameof(Dashboard));
+        }
+
+        // ── Endpoints API pour l'interface dynamique ─────────────────
+
+        [HttpGet]
+        public async Task<IActionResult> GetCrewsByVols(string volsIds)
+        {
+            if (string.IsNullOrEmpty(volsIds))
+                return Json(new List<object>());
+
+            var ids = volsIds.Split(',').Select(int.Parse).ToList();
+            
+            var crews = await _db.CrewAssignments
+                .Include(c => c.PNC)
+                .Where(c => ids.Contains(c.VolId) && c.PNC.Actif)
+                .Select(c => new { 
+                    id = c.PNC.Id, 
+                    texte = $"{c.PNC.Matricule} - {c.PNC.Nom} {c.PNC.Prenom} ({c.Rank})" 
+                })
+                .Distinct()
+                .ToListAsync();
+
+            return Json(crews);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RechercherArticle(string query)
+        {
+            if (string.IsNullOrEmpty(query)) return Json(new List<object>());
+
+            var term = query.ToLower();
+            var articles = await _db.Articles
+                .Where(a => a.CodeArticle.ToLower().Contains(term) || a.NomArticle.ToLower().Contains(term))
+                .Take(10)
+                .Select(a => new {
+                    id = a.Id,
+                    code = a.CodeArticle,
+                    designation = a.NomArticle,
+                    prix = a.PrixUnitaire
+                })
+                .ToListAsync();
+
+            return Json(articles);
         }
     }
 }

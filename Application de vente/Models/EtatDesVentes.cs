@@ -18,12 +18,8 @@ namespace ApplicationDeVente.Models
         [Display(Name = "Date du Vol")]
         public DateTime DateVol { get; set; } = DateTime.Today;
 
-        [Required(ErrorMessage = "Veuillez sélectionner un vol.")]
-        [Display(Name = "Vol")]
-        public int VolId { get; set; }
-
-        [ForeignKey("VolId")]
-        public Vol? Vol { get; set; }
+        [Display(Name = "Vols Associés")]
+        public ICollection<EtatDesVentesVol> VolsList { get; set; } = new List<EtatDesVentesVol>();
 
         [Required(ErrorMessage = "Veuillez sélectionner le PNC vendeur.")]
         [Display(Name = "PNC Vendeur")]
@@ -40,6 +36,9 @@ namespace ApplicationDeVente.Models
 
         [Display(Name = "Montant Encaissé (TND)")]
         public decimal MontantEncaisseTND { get; set; } = 0;
+
+        [Display(Name = "Montant Encaissé Réel (Déclaré)")]
+        public decimal MontantEncaisseReel { get; set; } = 0;
 
         [StringLength(50)]
         public string Statut { get; set; } = "Saisi"; // Ex: "Saisi", "Contrôlé", "Clôturé"

@@ -25,6 +25,11 @@ namespace ApplicationDeVente.Data
         public DbSet<EtatDesOffres> EtatsDesOffres { get; set; }
         public DbSet<LigneOffre> LignesOffres { get; set; }
 
+        // Tables de liaison (Refonte)
+        public DbSet<CrewAssignment> CrewAssignments { get; set; }
+        public DbSet<EtatDesVentesVol> EtatDesVentesVols { get; set; }
+        public DbSet<EtatDesOffresVol> EtatDesOffresVols { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -45,6 +50,10 @@ namespace ApplicationDeVente.Data
             builder.Entity<EtatDesVentes>()
                 .Property(e => e.MontantEncaisseTND)
                 .HasColumnType("decimal(18,3)"); // Le TND utilise 3 décimales
+
+            builder.Entity<EtatDesVentes>()
+                .Property(e => e.MontantEncaisseReel)
+                .HasColumnType("decimal(18,3)");
 
             builder.Entity<EtatDesVentes>()
                 .Property(e => e.TauxChangeApplique)

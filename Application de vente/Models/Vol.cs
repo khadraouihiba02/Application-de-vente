@@ -20,6 +20,11 @@ namespace ApplicationDeVente.Models
         [StringLength(10)]
         public string Destination { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "La date du vol est obligatoire.")]
+        [DataType(DataType.Date)]
+        [Display(Name = "Date du Vol")]
+        public DateTime DateVol { get; set; } = DateTime.Today;
+
         [Display(Name = "Actif")]
         public bool Actif { get; set; } = true;
 

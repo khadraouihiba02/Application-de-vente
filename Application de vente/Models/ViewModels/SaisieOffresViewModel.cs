@@ -15,19 +15,14 @@ namespace ApplicationDeVente.Models.ViewModels
         [Display(Name = "Date du Vol")]
         public DateTime DateVol { get; set; } = DateTime.Today;
 
-        [Required(ErrorMessage = "Veuillez sélectionner un vol.")]
-        [Display(Name = "Vol")]
-        public int VolId { get; set; }
-
-        [Required(ErrorMessage = "Veuillez sélectionner le PNC vendeur.")]
-        [Display(Name = "PNC Vendeur")]
-        public int PNCVendeurId { get; set; }
+        [Required(ErrorMessage = "Veuillez sélectionner au moins un vol.")]
+        [Display(Name = "Vols de la rotation")]
+        public int[] VolsIds { get; set; } = Array.Empty<int>();
 
         public decimal TauxChangeApplique { get; set; } = 1;
 
         // ── Listes pour les menus déroulants ──
         public List<SelectListItem> VolsDisponibles { get; set; } = new();
-        public List<SelectListItem> PNCsDisponibles { get; set; } = new();
 
         // ── Grille de saisie des articles ──
         public List<LigneSaisieOffre> LignesArticles { get; set; } = new();

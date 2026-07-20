@@ -18,19 +18,9 @@ namespace ApplicationDeVente.Models
         [Display(Name = "Date du Vol")]
         public DateTime DateVol { get; set; } = DateTime.Today;
 
-        [Required(ErrorMessage = "Veuillez sélectionner un vol.")]
-        [Display(Name = "Vol")]
-        public int VolId { get; set; }
+        [Display(Name = "Vols Associés")]
+        public ICollection<EtatDesOffresVol> VolsList { get; set; } = new List<EtatDesOffresVol>();
 
-        [ForeignKey("VolId")]
-        public Vol? Vol { get; set; }
-
-        [Required(ErrorMessage = "Veuillez sélectionner le PNC vendeur.")]
-        [Display(Name = "PNC Vendeur")]
-        public int PNCVendeurId { get; set; }
-
-        [ForeignKey("PNCVendeurId")]
-        public PNC? PNCVendeur { get; set; }
 
         [Display(Name = "Taux de Change Appliqué")]
         public decimal TauxChangeApplique { get; set; } = 1;

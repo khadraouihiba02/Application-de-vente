@@ -88,7 +88,7 @@
                                     <tr>
                                         <td><span class="badge bg-secondary fs-6">@item.NumeroFeuilleLigne</span></td>
                                         <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
-                                        <td>@item.Vol?.NumeroVol</td>
+                                        <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.NumeroVol))</td>
                                         <td class="fw-semibold">@item.PNCVendeur?.Nom @item.PNCVendeur?.Prenom</td>
                                         <td class="text-end fw-bold text-primary">@item.ChiffreAffairesEUR.ToString("F2") €</td>
                                         <td class="text-center">
@@ -154,8 +154,8 @@
                                     <tr>
                                         <td><span class="badge bg-dark">@item.NumeroFeuilleLigne</span></td>
                                         <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
-                                        <td>@item.Vol?.NumeroVol</td>
-                                        <td class="fw-semibold">@item.PNCVendeur?.Nom @item.PNCVendeur?.Prenom</td>
+                                        <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.NumeroVol))</td>
+                                        <td class="text-muted fst-italic">-</td>
                                         <td class="text-end fw-bold text-warning">@item.ChiffreAffairesEUR.ToString("F2") €</td>
                                         <td class="text-center">
                                             @if (item.Statut == "Saisi")
