@@ -34,10 +34,11 @@
                     <span asp-validation-for="DateVol" class="text-danger small"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="VolsIds" class="form-label fw-semibold"></label>
-                    <select asp-for="VolsIds" asp-items="Model.VolsDisponibles" class="form-select select2-vols" multiple="multiple" required data-placeholder="-- Sélectionner le/les vols --">
+                    <label asp-for="VolId" class="form-label fw-semibold">Vol</label>
+                    <select asp-for="VolId" asp-items="Model.VolsDisponibles" class="form-select select2-vols" required data-placeholder="-- Sélectionner le vol --">
+                        <option value="">-- Sélectionner le vol --</option>
                     </select>
-                    <span asp-validation-for="VolsIds" class="text-danger small"></span>
+                    <span asp-validation-for="VolId" class="text-danger small"></span>
                 </div>
             </div>
             

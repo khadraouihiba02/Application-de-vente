@@ -15,9 +15,9 @@ namespace ApplicationDeVente.Models.ViewModels
         [Display(Name = "Date du Vol")]
         public DateTime DateVol { get; set; } = DateTime.Today;
 
-        [Required(ErrorMessage = "Veuillez sélectionner au moins un vol.")]
-        [Display(Name = "Vols de la rotation")]
-        public int[] VolsIds { get; set; } = Array.Empty<int>();
+        [Required(ErrorMessage = "Veuillez sélectionner un vol.")]
+        [Display(Name = "Vol")]
+        public int VolId { get; set; }
 
         [Required(ErrorMessage = "Veuillez sélectionner le PNC vendeur.")]
         [Display(Name = "PNC Vendeur")]

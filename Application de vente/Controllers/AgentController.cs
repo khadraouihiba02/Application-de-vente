@@ -170,7 +170,7 @@ namespace ApplicationDeVente.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> SaisirOffres(SaisieOffresViewModel vm)
         {
-            if (!ModelState.IsValid || vm.VolsIds == null || vm.VolsIds.Length == 0)
+            if (!ModelState.IsValid || vm.VolId == 0)
             {
                 vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" }).ToListAsync();
                 if(vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieOffre>();
@@ -192,10 +192,7 @@ namespace ApplicationDeVente.Controllers
                 Statut = "Saisi"
             };
 
-            foreach (var volId in vm.VolsIds)
-            {
-                etatOffres.VolsList.Add(new EtatDesOffresVol { VolId = volId });
-            }
+            etatOffres.VolsList.Add(new EtatDesOffresVol { VolId = vm.VolId });
 
             foreach (var ligne in lignesFiltrees)
             {
@@ -235,6 +232,19 @@ namespace ApplicationDeVente.Controllers
                 })
                 .Distinct()
                 .ToListAsync();
+
+            // FALLBACK : Si la table CrewAssignments est vide ou aucun crew affecté,
+            // on retourne tous les PNC actifs pour débloquer la saisie
+            if (crews.Count == 0)
+            {
+                crews = await _db.PNCs
+                    .Where(p => p.Actif)
+                    .Select(p => new {
+                        id = p.Id,
+                        texte = $"{p.Matricule} - {p.Nom} {p.Prenom} (PNC)"
+                    })
+                    .ToListAsync();
+            }
 
             return Json(crews);
         }
