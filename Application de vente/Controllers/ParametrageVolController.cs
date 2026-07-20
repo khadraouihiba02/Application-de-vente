@@ -3,7 +3,8 @@ using ApplicationDeVente.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using ApplicationDeVente.Models.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 namespace ApplicationDeVente.Controllers
 {
     [Authorize(Roles = "Admin,Catering")]
@@ -19,52 +20,119 @@ namespace ApplicationDeVente.Controllers
             return View(vols);
         }
 
-        public IActionResult Creer()
+        public async Task<IActionResult> Creer()
         {
             ViewData["Title"] = "Nouveau Vol";
-            return View(new Vol());
+            var vm = new VolViewModel
+            {
+                PncsDisponibles = await GetPncSelectListAsync()
+            };
+            return View(vm);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Creer(Vol model)
+        public async Task<IActionResult> Creer(VolViewModel model)
         {
-            if (_db.Vols.Any(v => v.NumeroVol == model.NumeroVol))
-                ModelState.AddModelError("NumeroVol", "Ce numéro de vol existe déjà.");
+            if (_db.Vols.Any(v => v.NumeroVol == model.NumeroVol && v.DateVol == model.DateVol))
+                ModelState.AddModelError("NumeroVol", "Ce numéro de vol existe déjà pour cette date.");
 
             if (ModelState.IsValid)
             {
-                _db.Vols.Add(model);
+                var vol = new Vol
+                {
+                    NumeroVol = model.NumeroVol,
+                    Origine = model.Origine,
+                    Destination = model.Destination,
+                    DateVol = model.DateVol,
+                    Actif = model.Actif
+                };
+
+                _db.Vols.Add(vol);
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Vol {model.NumeroVol} ({model.Origine}/{model.Destination}) ajouté avec succès.";
+
+                if (model.SelectedPncIds != null && model.SelectedPncIds.Any())
+                {
+                    foreach (var pncId in model.SelectedPncIds)
+                    {
+                        _db.CrewAssignments.Add(new CrewAssignment { VolId = vol.Id, PNCId = pncId, Rank = "PNC" });
+                    }
+                    await _db.SaveChangesAsync();
+                }
+
+                TempData["Succes"] = $"Vol {vol.NumeroVol} ({vol.Origine}/{vol.Destination}) ajouté avec succès.";
                 return RedirectToAction(nameof(Index));
             }
+            
             ViewData["Title"] = "Nouveau Vol";
+            model.PncsDisponibles = await GetPncSelectListAsync();
             return View(model);
         }
 
         public async Task<IActionResult> Modifier(int id)
         {
             ViewData["Title"] = "Modifier Vol";
-            var vol = await _db.Vols.FindAsync(id);
+            var vol = await _db.Vols.Include(v => v.CrewAssignments).FirstOrDefaultAsync(v => v.Id == id);
             if (vol == null) return NotFound();
-            return View(vol);
+
+            var vm = new VolViewModel
+            {
+                Id = vol.Id,
+                NumeroVol = vol.NumeroVol,
+                Origine = vol.Origine,
+                Destination = vol.Destination,
+                DateVol = vol.DateVol,
+                Actif = vol.Actif,
+                SelectedPncIds = vol.CrewAssignments.Select(c => c.PNCId).ToList(),
+                PncsDisponibles = await GetPncSelectListAsync()
+            };
+
+            return View(vm);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Modifier(Vol model)
+        public async Task<IActionResult> Modifier(VolViewModel model)
         {
-            if (_db.Vols.Any(v => v.NumeroVol == model.NumeroVol && v.Id != model.Id))
-                ModelState.AddModelError("NumeroVol", "Ce numéro de vol est déjà utilisé.");
+            if (_db.Vols.Any(v => v.NumeroVol == model.NumeroVol && v.DateVol == model.DateVol && v.Id != model.Id))
+                ModelState.AddModelError("NumeroVol", "Ce numéro de vol est déjà utilisé pour cette date.");
 
             if (ModelState.IsValid)
             {
-                _db.Vols.Update(model);
+                var vol = await _db.Vols.Include(v => v.CrewAssignments).FirstOrDefaultAsync(v => v.Id == model.Id);
+                if (vol == null) return NotFound();
+
+                vol.NumeroVol = model.NumeroVol;
+                vol.Origine = model.Origine;
+                vol.Destination = model.Destination;
+                vol.DateVol = model.DateVol;
+                vol.Actif = model.Actif;
+
+                // Mettre à jour les affectations
+                _db.CrewAssignments.RemoveRange(vol.CrewAssignments);
+                
+                if (model.SelectedPncIds != null && model.SelectedPncIds.Any())
+                {
+                    foreach (var pncId in model.SelectedPncIds)
+                    {
+                        _db.CrewAssignments.Add(new CrewAssignment { VolId = vol.Id, PNCId = pncId, Rank = "PNC" });
+                    }
+                }
+
                 await _db.SaveChangesAsync();
                 TempData["Succes"] = $"Vol {model.NumeroVol} modifié avec succès.";
                 return RedirectToAction(nameof(Index));
             }
             ViewData["Title"] = "Modifier Vol";
+            model.PncsDisponibles = await GetPncSelectListAsync();
             return View(model);
+        }
+
+        private async Task<IEnumerable<SelectListItem>> GetPncSelectListAsync()
+        {
+            return await _db.PNCs.Where(p => p.Actif).Select(p => new SelectListItem
+            {
+                Value = p.Id.ToString(),
+                Text = $"{p.Matricule} - {p.Nom} {p.Prenom}"
+            }).ToListAsync();
         }
 
         [HttpPost, ValidateAntiForgeryToken]

@@ -129,8 +129,7 @@
             // Initialisation de Select2 pour les vols
             $('.select2-vols').select2({
                 theme: "bootstrap-5",
-                width: '100%',
-                closeOnSelect: false
+                width: '100%'
             });
 
             // Quand le vol change, on récupère les PNC correspondants via AJAX
@@ -166,6 +165,11 @@
                     pncSelect.append('<option value="">-- Sélectionnez d'abord les vols --</option>');
                 }
             });
+
+            // Déclencher le chargement initial si un vol est déjà sélectionné (ex: rechargement de page ou valeur par défaut)
+            if ($('#VolId').val()) {
+                $('#VolId').trigger('change');
+            }
 
             // ─── GESTION DYNAMIQUE DE LA GRILLE ARTICLES ───
             const taux = parseFloat($("#tauxApplique").val()) || 1.0;

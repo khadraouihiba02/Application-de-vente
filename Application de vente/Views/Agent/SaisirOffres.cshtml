@@ -111,9 +111,13 @@
             // Initialisation de Select2 pour les vols
             $('.select2-vols').select2({
                 theme: "bootstrap-5",
-                width: '100%',
-                closeOnSelect: false
+                width: '100%'
             });
+
+            // Déclencher le chargement initial si un vol est déjà sélectionné
+            if ($('#VolId').val()) {
+                $('#VolId').trigger('change');
+            }
 
             // ─── GESTION DYNAMIQUE DE LA GRILLE ARTICLES ───
             const taux = parseFloat($("#tauxApplique").val()) || 1.0;
