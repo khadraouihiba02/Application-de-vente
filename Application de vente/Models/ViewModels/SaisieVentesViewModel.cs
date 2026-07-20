@@ -32,7 +32,12 @@ namespace ApplicationDeVente.Models.ViewModels
 
         // ── Listes pour les menus déroulants ──
         public List<SelectListItem> VolsDisponibles { get; set; } = new();
-        public List<SelectListItem> PNCsDisponibles { get; set; } = new();
+        
+        // L'agent sélectionne les Crews (équipage) du vol - puis choisit le vendeur parmi eux
+        [Display(Name = "Équipage du Vol (Crews)")]
+        public List<int> CrewIds { get; set; } = new List<int>();
+        public List<SelectListItem> TousPNCs { get; set; } = new(); // Tous les PNC disponibles
+        public List<SelectListItem> PNCsDisponibles { get; set; } = new(); // Non utilisé (gardé pour compatibilité)
 
         // ── Grille de saisie des articles ──
         public List<LigneSaisieArticle> LignesArticles { get; set; } = new();

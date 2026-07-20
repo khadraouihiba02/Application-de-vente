@@ -87,9 +87,14 @@ namespace ApplicationDeVente.Controllers
                 .FirstOrDefaultAsync();
             vm.TauxChangeApplique = tauxActif?.Taux ?? 3.4000m;
 
+            // Charger TOUS les PNC actifs pour la liste Crews
+            vm.TousPNCs = await _db.PNCs.Where(p => p.Actif)
+                .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" })
+                .ToListAsync();
+
             // La grille des articles est vide au départ
             vm.LignesArticles = new List<LigneSaisieArticle>();
-            vm.PNCsDisponibles = new List<SelectListItem>(); // Rempli via AJAX
+            vm.PNCsDisponibles = new List<SelectListItem>();
 
             return View(vm);
         }
@@ -98,11 +103,11 @@ namespace ApplicationDeVente.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaisirVentes(SaisieVentesViewModel vm)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || vm.VolId == 0)
             {
-                // Recharger les listes en cas d'erreur
-                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination})" }).ToListAsync();
-                vm.PNCsDisponibles = await _db.PNCs.Where(p => p.Actif).Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" }).ToListAsync();
+                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" }).ToListAsync();
+                vm.TousPNCs = await _db.PNCs.Where(p => p.Actif).Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" }).ToListAsync();
+                if(vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieArticle>();
                 return View(vm);
             }
 
@@ -123,8 +128,12 @@ namespace ApplicationDeVente.Controllers
                 TauxChangeApplique = vm.TauxChangeApplique,
                 ChiffreAffairesEUR = totalEur,
                 MontantEncaisseTND = totalEur * vm.TauxChangeApplique,
+                MontantEncaisseReel = vm.MontantEncaisseReel,
                 Statut = "Saisi"
             };
+
+            // Lier le vol sélectionné
+            etatVentes.VolsList.Add(new EtatDesVentesVol { VolId = vm.VolId });
 
             foreach (var ligne in lignesFiltrees)
             {

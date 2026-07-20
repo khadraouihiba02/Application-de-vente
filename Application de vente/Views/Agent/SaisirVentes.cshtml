@@ -40,12 +40,27 @@
                     </select>
                     <span asp-validation-for="VolId" class="text-danger small"></span>
                 </div>
+            </div>
+
+            {{!-- Étape 2 : Équipage (Crews) du vol --}}
+            <div class="row g-3 mt-2">
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">👥 Équipage du Vol (Crews)</label>
+                    <select name="CrewIds" id="CrewIds" class="form-select select2-crews" multiple="multiple" data-placeholder="-- Sélectionnez les PNC de l'équipage --">
+                        @foreach (var pnc in Model.TousPNCs)
+                        {
+                            <option value="@pnc.Value">@pnc.Text</option>
+                        }
+                    </select>
+                    <div class="form-text">Sélectionnez tous les PNC de l'équipage de ce vol.</div>
+                </div>
                 <div class="col-md-4">
-                    <label asp-for="PNCVendeurId" class="form-label fw-semibold"></label>
+                    <label asp-for="PNCVendeurId" class="form-label fw-semibold">🎯 PNC Vendeur</label>
                     <select asp-for="PNCVendeurId" class="form-select" id="PNCVendeurId" required>
-                        <option value="">-- Sélectionnez d'abord les vols --</option>
+                        <option value="">-- Sélectionnez d'abord les crews --</option>
                     </select>
                     <span asp-validation-for="PNCVendeurId" class="text-danger small"></span>
+                    <div class="form-text text-primary">Choisissez le vendeur parmi l'équipage sélectionné.</div>
                 </div>
             </div>
             
@@ -126,50 +141,48 @@
 
     <script>
         $(document).ready(function () {
-            // Initialisation de Select2 pour les vols
+            // Initialisation Select2 pour les vols
             $('.select2-vols').select2({
                 theme: "bootstrap-5",
                 width: '100%'
             });
 
-            // Quand le vol change, on récupère les PNC correspondants via AJAX
-            $('#VolId').on('change', function () {
-                var selectedId = $(this).val();
-                var pncSelect = $('#PNCVendeurId');
-                
-                pncSelect.empty();
-                
-                if (selectedId) {
-                    pncSelect.append('<option value="">Chargement des crews...</option>');
-                    
-                    $.ajax({
-                        url: '@Url.Action("GetCrewsByVols", "Agent")',
-                        type: 'GET',
-                        data: { volsIds: selectedId },
-                        success: function (data) {
-                            pncSelect.empty();
-                            pncSelect.append('<option value="">-- Sélectionner le PNC --</option>');
-                            if(data.length === 0){
-                                pncSelect.append('<option value="" disabled>Aucun équipage trouvé pour ces vols</option>');
-                            } else {
-                                $.each(data, function (i, item) {
-                                    pncSelect.append($('<option>', {
-                                        value: item.id,
-                                        text: item.texte
-                                    }));
-                                });
-                            }
-                        }
-                    });
-                } else {
-                    pncSelect.append('<option value="">-- Sélectionnez d'abord les vols --</option>');
-                }
+            // Initialisation Select2 pour les Crews (équipage)
+            $('.select2-crews').select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                closeOnSelect: false,
+                placeholder: "-- Sélectionnez les PNC de l'équipage --"
             });
 
-            // Déclencher le chargement initial si un vol est déjà sélectionné (ex: rechargement de page ou valeur par défaut)
-            if ($('#VolId').val()) {
-                $('#VolId').trigger('change');
-            }
+            // Quand l'agent sélectionne/désélectionne des Crews,
+            // la liste "PNC Vendeur" se met à jour automatiquement (sans AJAX)
+            $('#CrewIds').on('change', function () {
+                var selectedCrews = $(this).val(); // tableau des IDs sélectionnés
+                var pncSelect = $('#PNCVendeurId');
+                var currentVal = pncSelect.val(); // garder la valeur actuelle si possible
+                
+                pncSelect.empty();
+
+                if (!selectedCrews || selectedCrews.length === 0) {
+                    pncSelect.append('<option value="">-- Sélectionnez d\'abord les crews --</option>');
+                    return;
+                }
+
+                pncSelect.append('<option value="">-- Choisir le PNC Vendeur --</option>');
+                
+                // Pour chaque crew sélectionné, on ajoute son option dans le menu Vendeur
+                $('#CrewIds option:selected').each(function () {
+                    var id = $(this).val();
+                    var text = $(this).text();
+                    pncSelect.append($('<option>', { value: id, text: text }));
+                });
+
+                // Remettre l'ancienne valeur si elle est encore dans la liste
+                if (currentVal && pncSelect.find('option[value="' + currentVal + '"]').length > 0) {
+                    pncSelect.val(currentVal);
+                }
+            });
 
             // ─── GESTION DYNAMIQUE DE LA GRILLE ARTICLES ───
             const taux = parseFloat($("#tauxApplique").val()) || 1.0;
