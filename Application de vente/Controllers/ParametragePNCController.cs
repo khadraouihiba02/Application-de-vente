@@ -15,39 +15,36 @@ namespace ApplicationDeVente.Controllers
         // ── Liste PNC ─────────────────────────────────────────────────
         public async Task<IActionResult> Index()
         {
-            ViewData["Title"] = "Gestion des PNC";
-            var pncs = await _db.PNCs.OrderBy(p => p.Nom).ToListAsync();
+            ViewData["Title"] = "Gestion des Cabin Crews";
+            var pncs = await _db.PNCs.OrderBy(p => p.Day_of_origin).ThenBy(p => p.FlightNumber).ToListAsync();
             return View(pncs);
         }
 
         // ── Créer PNC ─────────────────────────────────────────────────
         public IActionResult Creer()
         {
-            ViewData["Title"] = "Nouveau PNC";
+            ViewData["Title"] = "Nouveau Crew";
             return View(new PNC());
         }
 
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Creer(PNC model)
         {
-            if (_db.PNCs.Any(p => p.Matricule == model.Matricule))
-                ModelState.AddModelError("Matricule", "Ce matricule existe déjà.");
-
             if (ModelState.IsValid)
             {
                 _db.PNCs.Add(model);
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"PNC {model.Prenom} {model.Nom} ({model.Matricule}) ajouté avec succès.";
+                TempData["Succes"] = $"Crew {model.First_name} {model.name} ({model.TLC}) ajouté pour le vol {model.FlightNumber}.";
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Title"] = "Nouveau PNC";
+            ViewData["Title"] = "Nouveau Crew";
             return View(model);
         }
 
         // ── Modifier PNC ──────────────────────────────────────────────
         public async Task<IActionResult> Modifier(int id)
         {
-            ViewData["Title"] = "Modifier PNC";
+            ViewData["Title"] = "Modifier Crew";
             var pnc = await _db.PNCs.FindAsync(id);
             if (pnc == null) return NotFound();
             return View(pnc);
@@ -56,32 +53,15 @@ namespace ApplicationDeVente.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Modifier(PNC model)
         {
-            if (_db.PNCs.Any(p => p.Matricule == model.Matricule && p.Id != model.Id))
-                ModelState.AddModelError("Matricule", "Ce matricule est déjà utilisé par un autre PNC.");
-
             if (ModelState.IsValid)
             {
                 _db.PNCs.Update(model);
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"PNC {model.Prenom} {model.Nom} modifié avec succès.";
+                TempData["Succes"] = $"Crew {model.First_name} {model.name} modifié avec succès.";
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Title"] = "Modifier PNC";
+            ViewData["Title"] = "Modifier Crew";
             return View(model);
-        }
-
-        // ── Toggle Actif PNC ──────────────────────────────────────────
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleActif(int id)
-        {
-            var pnc = await _db.PNCs.FindAsync(id);
-            if (pnc != null)
-            {
-                pnc.Actif = !pnc.Actif;
-                await _db.SaveChangesAsync();
-                TempData["Succes"] = $"PNC {pnc.Prenom} {pnc.Nom} {(pnc.Actif ? "activé" : "désactivé")}.";
-            }
-            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost, ValidateAntiForgeryToken]
@@ -92,7 +72,7 @@ namespace ApplicationDeVente.Controllers
             {
                 _db.PNCs.Remove(pnc);
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"PNC {pnc.Prenom} {pnc.Nom} ({pnc.Matricule}) a été supprimé.";
+                TempData["Succes"] = $"Crew {pnc.First_name} {pnc.name} ({pnc.TLC}) a été supprimé.";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -102,7 +82,7 @@ namespace ApplicationDeVente.Controllers
         {
             if (ids == null || ids.Length == 0)
             {
-                TempData["Erreur"] = "Aucun PNC sélectionné.";
+                TempData["Erreur"] = "Aucun Crew sélectionné.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -111,17 +91,7 @@ namespace ApplicationDeVente.Controllers
             if (actionType == "Supprimer")
             {
                 _db.PNCs.RemoveRange(pncs);
-                TempData["Succes"] = $"{pncs.Count} PNC supprimés avec succès.";
-            }
-            else if (actionType == "Activer")
-            {
-                pncs.ForEach(p => p.Actif = true);
-                TempData["Succes"] = $"{pncs.Count} PNC activés avec succès.";
-            }
-            else if (actionType == "Desactiver")
-            {
-                pncs.ForEach(p => p.Actif = false);
-                TempData["Succes"] = $"{pncs.Count} PNC désactivés avec succès.";
+                TempData["Succes"] = $"{pncs.Count} Crews supprimés avec succès.";
             }
 
             await _db.SaveChangesAsync();
@@ -132,27 +102,37 @@ namespace ApplicationDeVente.Controllers
         public IActionResult TelechargerModele()
         {
             using var workbook = new ClosedXML.Excel.XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Modèle PNC");
+            var worksheet = workbook.Worksheets.Add("Modèle Cabin Crew");
             
             // En-têtes
-            worksheet.Cell(1, 1).Value = "Matricule";
-            worksheet.Cell(1, 2).Value = "Nom";
-            worksheet.Cell(1, 3).Value = "Prénom";
+            worksheet.Cell(1, 1).Value = "Day_of_origin";
+            worksheet.Cell(1, 2).Value = "FlightNumber";
+            worksheet.Cell(1, 3).Value = "departure";
+            worksheet.Cell(1, 4).Value = "destination";
+            worksheet.Cell(1, 5).Value = "TLC";
+            worksheet.Cell(1, 6).Value = "name";
+            worksheet.Cell(1, 7).Value = "First_name";
+            worksheet.Cell(1, 8).Value = "Rank";
             
             // Style
-            worksheet.Range("A1:C1").Style.Font.Bold = true;
-            worksheet.Range("A1:C1").Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightGray;
+            worksheet.Range("A1:H1").Style.Font.Bold = true;
+            worksheet.Range("A1:H1").Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightGray;
             worksheet.Columns().AdjustToContents();
 
             // Exemple
-            worksheet.Cell(2, 1).Value = "15070F";
-            worksheet.Cell(2, 2).Value = "BEN SALEM";
-            worksheet.Cell(2, 3).Value = "KAIS";
+            worksheet.Cell(2, 1).Value = DateTime.Today.ToString("dd/MM/yyyy");
+            worksheet.Cell(2, 2).Value = "TU202";
+            worksheet.Cell(2, 3).Value = "TUN";
+            worksheet.Cell(2, 4).Value = "CDG";
+            worksheet.Cell(2, 5).Value = "BA1";
+            worksheet.Cell(2, 6).Value = "BEN ALI";
+            worksheet.Cell(2, 7).Value = "AHMED";
+            worksheet.Cell(2, 8).Value = "PNC";
 
             using var stream = new System.IO.MemoryStream();
             workbook.SaveAs(stream);
             var content = stream.ToArray();
-            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Modele_Import_PNC.xlsx");
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Modele_Import_CabinCrew.xlsx");
         }
 
         [HttpPost]
@@ -174,37 +154,39 @@ namespace ApplicationDeVente.Controllers
                 var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Ignorer l'en-tête
 
                 int ajoutes = 0;
-                int ignores = 0;
 
                 foreach (var row in rows)
                 {
-                    string matricule = row.Cell(1).GetValue<string>().Trim();
-                    string nom = row.Cell(2).GetValue<string>().Trim();
-                    string prenom = row.Cell(3).GetValue<string>().Trim();
+                    string dateStr = row.Cell(1).GetValue<string>().Trim();
+                    string fn = row.Cell(2).GetValue<string>().Trim().ToUpper();
+                    string dep = row.Cell(3).GetValue<string>().Trim().ToUpper();
+                    string arr = row.Cell(4).GetValue<string>().Trim().ToUpper();
+                    string tlc = row.Cell(5).GetValue<string>().Trim();
+                    string nom = row.Cell(6).GetValue<string>().Trim();
+                    string prenom = row.Cell(7).GetValue<string>().Trim();
+                    string rank = row.Cell(8).GetValue<string>().Trim();
 
-                    if (!string.IsNullOrEmpty(matricule) && !string.IsNullOrEmpty(nom))
+                    if (!string.IsNullOrEmpty(tlc) && !string.IsNullOrEmpty(fn))
                     {
-                        // Vérifier si le matricule existe déjà
-                        if (!_db.PNCs.Any(p => p.Matricule == matricule))
+                        DateTime dateOrigin = DateTime.TryParse(dateStr, out DateTime d) ? d : DateTime.Today;
+
+                        _db.PNCs.Add(new PNC
                         {
-                            _db.PNCs.Add(new PNC
-                            {
-                                Matricule = matricule,
-                                Nom = nom,
-                                Prenom = prenom,
-                                Actif = true
-                            });
-                            ajoutes++;
-                        }
-                        else
-                        {
-                            ignores++;
-                        }
+                            Day_of_origin = dateOrigin,
+                            FlightNumber = fn,
+                            departure = dep,
+                            destination = arr,
+                            TLC = tlc,
+                            name = nom,
+                            First_name = prenom,
+                            Rank = rank
+                        });
+                        ajoutes++;
                     }
                 }
 
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Importation terminée : {ajoutes} PNC ajoutés, {ignores} ignorés (déjà existants).";
+                TempData["Succes"] = $"Importation terminée : {ajoutes} Crews ajoutés.";
             }
             catch (Exception ex)
             {

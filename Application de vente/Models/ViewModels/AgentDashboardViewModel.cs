@@ -10,5 +10,7 @@ namespace ApplicationDeVente.Models.ViewModels
         public decimal CommissionEstimee { get; set; } = 0;
         public List<EtatDesVentes> DerniersEtats { get; set; } = new();
         public List<EtatDesOffres> DerniersEtatsOffres { get; set; } = new();
+        public List<EtatDesVentesFRS> DerniersEtatsFRS { get; set; } = new();
+        public List<EtatDesOffresFRS> DerniersEtatsOffresFRS { get; set; } = new();
     }
 }

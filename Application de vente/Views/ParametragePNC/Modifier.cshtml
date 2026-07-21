@@ -1,39 +1,62 @@
 @model ApplicationDeVente.Models.PNC
 @{
-    ViewData["Title"] = "Modifier PNC";
+    ViewData["Title"] = "Modifier Crew";
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <div class="card shadow-sm border-0">
             <div class="card-header fw-bold text-white" style="background:#d9230f;">
-                ✏️ Modifier le PNC — @Model.Matricule
+                ✏️ Modifier le Crew — @Model.TLC
             </div>
             <div class="card-body p-4">
                 <form asp-action="Modifier" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Id" />
+                    
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label asp-for="Matricule" class="form-label fw-semibold"></label>
-                            <input asp-for="Matricule" class="form-control" />
-                            <span asp-validation-for="Matricule" class="text-danger small"></span>
+                        <div class="col-md-6">
+                            <label asp-for="FlightNumber" class="form-label fw-semibold">FlightNumber (N° Vol)</label>
+                            <input asp-for="FlightNumber" class="form-control" style="text-transform:uppercase;" />
+                            <span asp-validation-for="FlightNumber" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Nom" class="form-label fw-semibold"></label>
-                            <input asp-for="Nom" class="form-control" />
-                            <span asp-validation-for="Nom" class="text-danger small"></span>
+                            <label asp-for="Day_of_origin" class="form-label fw-semibold">Day_of_origin (Date)</label>
+                            <input asp-for="Day_of_origin" class="form-control" type="date" />
+                            <span asp-validation-for="Day_of_origin" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="departure" class="form-label fw-semibold">departure (Origine)</label>
+                            <input asp-for="departure" class="form-control" style="text-transform:uppercase;" maxlength="5" />
+                            <span asp-validation-for="departure" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Prenom" class="form-label fw-semibold"></label>
-                            <input asp-for="Prenom" class="form-control" />
-                            <span asp-validation-for="Prenom" class="text-danger small"></span>
+                            <label asp-for="destination" class="form-label fw-semibold">destination</label>
+                            <input asp-for="destination" class="form-control" style="text-transform:uppercase;" maxlength="5" />
+                            <span asp-validation-for="destination" class="text-danger small"></span>
                         </div>
-                        <div class="col-md-12">
-                            <div class="form-check form-switch">
-                                <input asp-for="Actif" class="form-check-input" type="checkbox" />
-                                <label asp-for="Actif" class="form-check-label">PNC Actif</label>
-                            </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="TLC" class="form-label fw-semibold">TLC (Matricule)</label>
+                            <input asp-for="TLC" class="form-control" />
+                            <span asp-validation-for="TLC" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Rank" class="form-label fw-semibold">Rank (Grade)</label>
+                            <input asp-for="Rank" class="form-control" />
+                            <span asp-validation-for="Rank" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="name" class="form-label fw-semibold">name (Nom)</label>
+                            <input asp-for="name" class="form-control" />
+                            <span asp-validation-for="name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="First_name" class="form-label fw-semibold">First_name (Prénom)</label>
+                            <input asp-for="First_name" class="form-control" />
+                            <span asp-validation-for="First_name" class="text-danger small"></span>
                         </div>
                     </div>
                     <hr class="mt-4" />

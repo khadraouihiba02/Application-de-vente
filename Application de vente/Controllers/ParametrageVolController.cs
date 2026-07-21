@@ -16,7 +16,7 @@ namespace ApplicationDeVente.Controllers
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Gestion des Vols";
-            var vols = await _db.Vols.OrderBy(v => v.NumeroVol).ToListAsync();
+            var vols = await _db.Vols.OrderBy(v => v.FN_NUMBER).ToListAsync();
             return View(vols);
         }
 
@@ -29,14 +29,14 @@ namespace ApplicationDeVente.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Creer(Vol model)
         {
-            if (_db.Vols.Any(v => v.NumeroVol == model.NumeroVol && v.DateVol == model.DateVol))
-                ModelState.AddModelError("NumeroVol", "Ce numéro de vol existe déjà pour cette date.");
+            if (_db.Vols.Any(v => v.FN_NUMBER == model.FN_NUMBER && v.DAY_OF_ORIGIN == model.DAY_OF_ORIGIN))
+                ModelState.AddModelError("FN_NUMBER", "Ce numéro de vol existe déjà pour cette date.");
 
             if (ModelState.IsValid)
             {
                 _db.Vols.Add(model);
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Vol {model.NumeroVol} ({model.Origine}/{model.Destination}) ajouté avec succès.";
+                TempData["Succes"] = $"Vol {model.FN_NUMBER} ({model.DEP_AP_ACTUAL}/{model.ARR_AP_ACTUAL}) ajouté avec succès.";
                 return RedirectToAction(nameof(Index));
             }
             ViewData["Title"] = "Nouveau Vol";
@@ -54,14 +54,14 @@ namespace ApplicationDeVente.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Modifier(Vol model)
         {
-            if (_db.Vols.Any(v => v.NumeroVol == model.NumeroVol && v.DateVol == model.DateVol && v.Id != model.Id))
-                ModelState.AddModelError("NumeroVol", "Ce numéro de vol est déjà utilisé pour cette date.");
+            if (_db.Vols.Any(v => v.FN_NUMBER == model.FN_NUMBER && v.DAY_OF_ORIGIN == model.DAY_OF_ORIGIN && v.Id != model.Id))
+                ModelState.AddModelError("FN_NUMBER", "Ce numéro de vol est déjà utilisé pour cette date.");
 
             if (ModelState.IsValid)
             {
                 _db.Vols.Update(model);
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Vol {model.NumeroVol} modifié avec succès.";
+                TempData["Succes"] = $"Vol {model.FN_NUMBER} modifié avec succès.";
                 return RedirectToAction(nameof(Index));
             }
             ViewData["Title"] = "Modifier Vol";
@@ -76,7 +76,7 @@ namespace ApplicationDeVente.Controllers
             {
                 vol.Actif = !vol.Actif;
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Vol {vol.NumeroVol} {(vol.Actif ? "activé" : "désactivé")}.";
+                TempData["Succes"] = $"Vol {vol.FN_NUMBER} {(vol.Actif ? "activé" : "désactivé")}.";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -89,7 +89,7 @@ namespace ApplicationDeVente.Controllers
             {
                 _db.Vols.Remove(vol);
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Vol {vol.NumeroVol} a été supprimé.";
+                TempData["Succes"] = $"Vol {vol.FN_NUMBER} a été supprimé.";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -175,9 +175,9 @@ namespace ApplicationDeVente.Controllers
 
                     if (!string.IsNullOrEmpty(numVol))
                     {
-                        if (!_db.Vols.Any(v => v.NumeroVol == numVol))
+                        if (!_db.Vols.Any(v => v.FN_NUMBER == numVol))
                         {
-                            _db.Vols.Add(new Vol { NumeroVol = numVol, Origine = origine, Destination = dest, Actif = true });
+                            _db.Vols.Add(new Vol { FN_NUMBER = numVol, DEP_AP_ACTUAL = origine, ARR_AP_ACTUAL = dest, Actif = true });
                             ajoutes++;
                         }
                         else

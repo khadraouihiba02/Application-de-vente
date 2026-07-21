@@ -1,19 +1,19 @@
 @model IEnumerable<ApplicationDeVente.Models.PNC>
 @{
-    ViewData["Title"] = "Gestion des PNC";
+    ViewData["Title"] = "Gestion des Crews";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h4 class="fw-bold mb-0">👨‍✈️ Liste des PNC</h4>
-        <small class="text-muted">Personnel Navigant Commercial enregistré dans le système.</small>
+        <h4 class="fw-bold mb-0">👨‍✈️ Liste des Cabin Crews</h4>
+        <small class="text-muted">Personnel Navigant Commercial affecté aux vols.</small>
     </div>
     <div class="d-flex gap-2">
         <button type="button" class="btn btn-outline-success fw-bold" data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="bi bi-file-earmark-excel"></i> 📥 Importer Excel
         </button>
         <a asp-action="Creer" class="btn btn-danger fw-bold">
-            <i class="bi bi-plus-lg"></i> + Nouveau PNC
+            <i class="bi bi-plus-lg"></i> + Nouveau Crew
         </a>
     </div>
 </div>
@@ -31,7 +31,7 @@
                 <div class="modal-body">
                     <div class="alert alert-info small">
                         <strong>Étape 1 :</strong> <a asp-action="TelechargerModele" class="fw-bold text-decoration-none">Téléchargez le modèle Excel</a><br/>
-                        <strong>Étape 2 :</strong> Remplissez-le avec vos PNC (Matricule, Nom, Prénom)<br/>
+                        <strong>Étape 2 :</strong> Remplissez-le avec vos Crews<br/>
                         <strong>Étape 3 :</strong> Chargez le fichier ci-dessous.
                     </div>
                     <div class="mb-3">
@@ -50,16 +50,14 @@
 
 <div class="card border-0 shadow-sm">
     <div class="card-header fw-bold text-white" style="background:#d9230f;">
-        🗂 Liste des PNC (@Model.Count() enregistrements)
+        🗂 Liste des Crews (@Model.Count() enregistrements)
     </div>
     
     <form asp-action="ActionEnMasse" method="post" id="formActionMasse">
         @Html.AntiForgeryToken()
         <div class="p-2 bg-light border-bottom d-flex gap-2 align-items-center">
             <span class="fw-semibold ms-2">Actions sur la sélection :</span>
-            <button type="submit" name="actionType" value="Activer" class="btn btn-sm btn-outline-success">✅ Activer</button>
-            <button type="submit" name="actionType" value="Desactiver" class="btn btn-sm btn-outline-warning">🚫 Désactiver</button>
-            <button type="submit" name="actionType" value="Supprimer" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer les PNC sélectionnés ?');">🗑️ Supprimer</button>
+            <button type="submit" name="actionType" value="Supprimer" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer les Crews sélectionnés ?');">🗑️ Supprimer</button>
         </div>
         
         <div class="table-responsive">
@@ -69,16 +67,18 @@
                         <th style="width: 40px;" class="text-center">
                             <input type="checkbox" id="selectAll" class="form-check-input" />
                         </th>
-                        <th>Matricule</th>
+                        <th>Date</th>
+                        <th>N° Vol</th>
+                        <th>TLC</th>
                         <th>Nom & Prénom</th>
-                        <th class="text-center">Statut</th>
+                        <th>Grade</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (!Model.Any())
                     {
-                        <tr><td colspan="6" class="text-center text-muted py-4">Aucun PNC enregistré.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-4">Aucun Crew enregistré.</td></tr>
                     }
                     @foreach (var pnc in Model)
                     {
@@ -86,23 +86,13 @@
                             <td class="text-center align-middle">
                                 <input type="checkbox" name="ids" value="@pnc.Id" class="form-check-input chk-pnc" />
                             </td>
-                            <td class="align-middle"><span class="badge bg-secondary fs-6">@pnc.Matricule</span></td>
-                            <td class="fw-semibold align-middle">@pnc.Nom @pnc.Prenom</td>
-                            <td class="text-center align-middle">
-                                @if (pnc.Actif)
-                                {
-                                    <span class="badge bg-success">✅ Actif</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">⏹ Inactif</span>
-                                }
-                            </td>
+                            <td class="align-middle fw-semibold">@pnc.Day_of_origin.ToString("dd/MM/yyyy")</td>
+                            <td class="align-middle"><span class="badge bg-primary fs-6">@pnc.FlightNumber</span></td>
+                            <td class="align-middle"><span class="badge bg-secondary fs-6">@pnc.TLC</span></td>
+                            <td class="fw-semibold align-middle">@pnc.name @pnc.First_name</td>
+                            <td class="align-middle">@pnc.Rank</td>
                             <td class="text-end align-middle">
                                 <a asp-action="Modifier" asp-route-id="@pnc.Id" class="btn btn-sm btn-outline-primary me-1">✏️ Modifier</a>
-                                <button type="submit" form="formToggle_@pnc.Id" class="btn btn-sm @(pnc.Actif ? "btn-outline-warning" : "btn-outline-success") me-1">
-                                    @(pnc.Actif ? "🚫 Désactiver" : "✅ Activer")
-                                </button>
                                 <button type="submit" form="formSupprimer_@pnc.Id" class="btn btn-sm btn-outline-danger">🗑️ Supprimer</button>
                             </td>
                         </tr>
@@ -115,8 +105,7 @@
 
 @foreach(var pnc in Model)
 {
-    <form asp-action="ToggleActif" asp-route-id="@pnc.Id" method="post" id="formToggle_@pnc.Id" class="d-none">@Html.AntiForgeryToken()</form>
-    <form asp-action="Supprimer" asp-route-id="@pnc.Id" method="post" id="formSupprimer_@pnc.Id" class="d-none" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce PNC ?');">@Html.AntiForgeryToken()</form>
+    <form asp-action="Supprimer" asp-route-id="@pnc.Id" method="post" id="formSupprimer_@pnc.Id" class="d-none" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce Crew ?');">@Html.AntiForgeryToken()</form>
 }
 
 @section Scripts {

@@ -58,6 +58,20 @@ namespace ApplicationDeVente.Controllers
                 .Take(5)
                 .ToListAsync();
 
+            // Charger les 5 dernières saisies de ventes FRS
+            vm.DerniersEtatsFRS = await _db.EtatsDesVentesFRS
+                .Include(e => e.EtatDesVentes).ThenInclude(ev => ev.VolsList).ThenInclude(ev => ev.Vol)
+                .OrderByDescending(e => e.Id)
+                .Take(5)
+                .ToListAsync();
+
+            // Charger les 5 dernières saisies d'offres FRS
+            vm.DerniersEtatsOffresFRS = await _db.EtatsDesOffresFRS
+                .Include(e => e.EtatDesOffres).ThenInclude(ev => ev.VolsList).ThenInclude(ev => ev.Vol)
+                .OrderByDescending(e => e.Id)
+                .Take(5)
+                .ToListAsync();
+
             return View(vm);
         }
 
@@ -72,12 +86,13 @@ namespace ApplicationDeVente.Controllers
             var vm = new SaisieVentesViewModel();
             var aujourdhui = DateTime.Today;
 
-            // Vols disponibles (actifs, à partir de la date du jour ou récents)
-            vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif)
+            // Tous les vols actifs disponibles
+            vm.VolsDisponibles = await _db.Vols
+                .Where(v => v.Actif)
                 .Select(v => new SelectListItem 
                 { 
                     Value = v.Id.ToString(), 
-                    Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" 
+                    Text = $"{v.FN_NUMBER} ({v.DEP_AP_ACTUAL} - {v.ARR_AP_ACTUAL})" 
                 })
                 .ToListAsync();
 
@@ -87,10 +102,8 @@ namespace ApplicationDeVente.Controllers
                 .FirstOrDefaultAsync();
             vm.TauxChangeApplique = tauxActif?.Taux ?? 3.4000m;
 
-            // Charger TOUS les PNC actifs pour la liste Crews
-            vm.TousPNCs = await _db.PNCs.Where(p => p.Actif)
-                .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" })
-                .ToListAsync();
+            // On n'a plus besoin de charger TousPNCs ici car c'est géré via AJAX maintenant.
+            vm.TousPNCs = new List<SelectListItem>();
 
             // La grille des articles est vide au départ
             vm.LignesArticles = new List<LigneSaisieArticle>();
@@ -105,8 +118,7 @@ namespace ApplicationDeVente.Controllers
         {
             if (!ModelState.IsValid || vm.VolId == 0)
             {
-                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" }).ToListAsync();
-                vm.TousPNCs = await _db.PNCs.Where(p => p.Actif).Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Matricule} - {p.Nom} {p.Prenom}" }).ToListAsync();
+                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.FN_NUMBER} ({v.DEP_AP_ACTUAL} - {v.ARR_AP_ACTUAL}) - {v.DAY_OF_ORIGIN:dd/MM/yyyy}" }).ToListAsync();
                 if(vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieArticle>();
                 return View(vm);
             }
@@ -162,7 +174,7 @@ namespace ApplicationDeVente.Controllers
             var aujourdhui = DateTime.Today;
 
             vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif)
-                .Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" })
+                .Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.FN_NUMBER} ({v.DEP_AP_ACTUAL} - {v.ARR_AP_ACTUAL}) - {v.DAY_OF_ORIGIN:dd/MM/yyyy}" })
                 .ToListAsync();
 
             var tauxActif = await _db.TauxChanges
@@ -181,7 +193,7 @@ namespace ApplicationDeVente.Controllers
         {
             if (!ModelState.IsValid || vm.VolId == 0)
             {
-                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.NumeroVol} ({v.Origine} - {v.Destination}) - {v.DateVol:dd/MM/yyyy}" }).ToListAsync();
+                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.FN_NUMBER} ({v.DEP_AP_ACTUAL} - {v.ARR_AP_ACTUAL}) - {v.DAY_OF_ORIGIN:dd/MM/yyyy}" }).ToListAsync();
                 if(vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieOffre>();
                 return View(vm);
             }
@@ -222,40 +234,201 @@ namespace ApplicationDeVente.Controllers
             return RedirectToAction(nameof(Dashboard));
         }
 
+        // ── Saisie des Ventes FRS ─────────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> SaisirVentesFRS()
+        {
+            var vm = new SaisieVentesFRSViewModel();
+            
+            var dejaSaisis = await _db.EtatsDesVentesFRS.Select(f => f.EtatDesVentesId).ToListAsync();
+            
+            vm.EtatsPNCDisponibles = await _db.EtatsDesVentes
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                .Where(e => !dejaSaisis.Contains(e.Id))
+                .Select(e => new SelectListItem
+                {
+                    Value = e.Id.ToString(),
+                    Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
+                })
+                .ToListAsync();
+
+            vm.LignesArticles = new List<LigneSaisieVenteFRS>();
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaisirVentesFRS(SaisieVentesFRSViewModel vm)
+        {
+            if (!ModelState.IsValid || vm.EtatDesVentesId == 0)
+            {
+                var dejaSaisis = await _db.EtatsDesVentesFRS.Select(f => f.EtatDesVentesId).ToListAsync();
+                vm.EtatsPNCDisponibles = await _db.EtatsDesVentes
+                    .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                    .Where(e => !dejaSaisis.Contains(e.Id))
+                    .Select(e => new SelectListItem
+                    {
+                        Value = e.Id.ToString(),
+                        Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
+                    })
+                    .ToListAsync();
+
+                if (vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieVenteFRS>();
+                return View(vm);
+            }
+
+            var lignesFiltrees = vm.LignesArticles.Where(l => l.QuantiteVendueFRS > 0).ToList();
+            decimal totalEur = lignesFiltrees.Sum(l => l.QuantiteVendueFRS * l.PrixUnitaireFRS);
+
+            var etatVentesFRS = new EtatDesVentesFRS
+            {
+                NumeroEtat = vm.NumeroEtat,
+                DateReception = vm.DateReception,
+                EtatDesVentesId = vm.EtatDesVentesId,
+                MontantFRS = totalEur,
+                StatutControle = "En attente"
+            };
+
+            foreach (var ligne in lignesFiltrees)
+            {
+                etatVentesFRS.Lignes.Add(new LigneVenteFRS
+                {
+                    CodeArticle = ligne.CodeArticle,
+                    NomArticle = ligne.Designation,
+                    QuantiteVendueFRS = ligne.QuantiteVendueFRS,
+                    PrixUnitaireFRS = ligne.PrixUnitaireFRS,
+                    ValeurFRS = ligne.QuantiteVendueFRS * ligne.PrixUnitaireFRS
+                });
+            }
+
+            _db.EtatsDesVentesFRS.Add(etatVentesFRS);
+            await _db.SaveChangesAsync();
+
+            TempData["Succes"] = $"L'état des ventes FRS N° {vm.NumeroEtat} a été enregistré avec succès (Total : {totalEur:F2} €).";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        // ── Saisie des Offres FRS ─────────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> SaisirOffresFRS()
+        {
+            var vm = new SaisieOffresFRSViewModel();
+
+            var dejaSaisis = await _db.EtatsDesOffresFRS.Select(f => f.EtatDesOffresId).ToListAsync();
+
+            vm.EtatsPNCDisponibles = await _db.EtatsDesOffres
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                .Where(e => !dejaSaisis.Contains(e.Id))
+                .Select(e => new SelectListItem
+                {
+                    Value = e.Id.ToString(),
+                    Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
+                })
+                .ToListAsync();
+
+            vm.LignesArticles = new List<LigneSaisieOffreFRS>();
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaisirOffresFRS(SaisieOffresFRSViewModel vm)
+        {
+            if (!ModelState.IsValid || vm.EtatDesOffresId == 0)
+            {
+                var dejaSaisis = await _db.EtatsDesOffresFRS.Select(f => f.EtatDesOffresId).ToListAsync();
+                vm.EtatsPNCDisponibles = await _db.EtatsDesOffres
+                    .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                    .Where(e => !dejaSaisis.Contains(e.Id))
+                    .Select(e => new SelectListItem
+                    {
+                        Value = e.Id.ToString(),
+                        Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
+                    })
+                    .ToListAsync();
+
+                if (vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieOffreFRS>();
+                return View(vm);
+            }
+
+            var lignesFiltrees = vm.LignesArticles.Where(l => l.DotationInitialeFRS > 0 || l.QuantiteRestanteFRS > 0).ToList();
+
+            var etatOffresFRS = new EtatDesOffresFRS
+            {
+                NumeroEtat = vm.NumeroEtat,
+                DateReception = vm.DateReception,
+                EtatDesOffresId = vm.EtatDesOffresId,
+                StatutControle = "En attente"
+            };
+
+            foreach (var ligne in lignesFiltrees)
+            {
+                int qteConsommee = ligne.DotationInitialeFRS - ligne.QuantiteRestanteFRS;
+                if (qteConsommee < 0) qteConsommee = 0;
+
+                etatOffresFRS.Lignes.Add(new LigneOffreFRS
+                {
+                    CodeArticle = ligne.CodeArticle,
+                    NomArticle = ligne.Designation,
+                    DotationInitialeFRS = ligne.DotationInitialeFRS,
+                    QuantiteRestanteFRS = ligne.QuantiteRestanteFRS,
+                    QuantiteConsommeeFRS = qteConsommee
+                });
+            }
+
+            _db.EtatsDesOffresFRS.Add(etatOffresFRS);
+            await _db.SaveChangesAsync();
+
+            TempData["Succes"] = $"L'état des offres FRS N° {vm.NumeroEtat} a été enregistré avec succès.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
         // ── Endpoints API pour l'interface dynamique ─────────────────
 
         [HttpGet]
-        public async Task<IActionResult> GetCrewsByVols(string volsIds)
+        public async Task<IActionResult> GetCrewsByVol(int volId)
         {
-            if (string.IsNullOrEmpty(volsIds))
+            if (volId == 0)
                 return Json(new List<object>());
 
-            var ids = volsIds.Split(',').Select(int.Parse).ToList();
+            var vol = await _db.Vols.FindAsync(volId);
+            if (vol == null)
+                return Json(new List<object>());
             
-            var crews = await _db.CrewAssignments
-                .Include(c => c.PNC)
-                .Where(c => ids.Contains(c.VolId) && c.PNC.Actif)
-                .Select(c => new { 
-                    id = c.PNC.Id, 
-                    texte = $"{c.PNC.Matricule} - {c.PNC.Nom} {c.PNC.Prenom} ({c.Rank})" 
+            // On cherche les crews où le FlightNumber et Day_of_origin correspondent au vol sélectionné
+            var crews = await _db.PNCs
+                .Where(p => p.FlightNumber == vol.FN_NUMBER && p.Day_of_origin.Date == vol.DAY_OF_ORIGIN.Date)
+                .Select(p => new { 
+                    id = p.Id, 
+                    texte = $"{p.TLC} - {p.name} {p.First_name} ({p.Rank})" 
                 })
-                .Distinct()
                 .ToListAsync();
 
-            // FALLBACK : Si la table CrewAssignments est vide ou aucun crew affecté,
-            // on retourne tous les PNC actifs pour débloquer la saisie
-            if (crews.Count == 0)
+            return Json(crews);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetVolsByDate(string date)
+        {
+            if (!DateTime.TryParseExact(date, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
             {
-                crews = await _db.PNCs
-                    .Where(p => p.Actif)
-                    .Select(p => new {
-                        id = p.Id,
-                        texte = $"{p.Matricule} - {p.Nom} {p.Prenom} (PNC)"
-                    })
-                    .ToListAsync();
+                if (!DateTime.TryParse(date, out parsedDate))
+                {
+                    return Json(new List<object>());
+                }
             }
 
-            return Json(crews);
+            var vols = await _db.Vols
+                .Where(v => v.DAY_OF_ORIGIN.Date == parsedDate.Date)
+                .Select(v => new {
+                    id = v.Id,
+                    texte = $"{v.FN_NUMBER} ({v.DEP_AP_ACTUAL} - {v.ARR_AP_ACTUAL}) - {v.DAY_OF_ORIGIN.ToString("dd/MM/yyyy")}"
+                })
+                .ToListAsync();
+
+            return Json(vols);
         }
 
         [HttpGet]

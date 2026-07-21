@@ -88,8 +88,8 @@
                                     <tr>
                                         <td><span class="badge bg-secondary fs-6">@item.NumeroFeuilleLigne</span></td>
                                         <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
-                                        <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.NumeroVol))</td>
-                                        <td class="fw-semibold">@item.PNCVendeur?.Nom @item.PNCVendeur?.Prenom</td>
+                                        <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.FN_NUMBER))</td>
+                                        <td class="fw-semibold">@item.PNCVendeur?.name @item.PNCVendeur?.First_name</td>
                                         <td class="text-end fw-bold text-primary">@item.ChiffreAffairesEUR.ToString("F2") €</td>
                                         <td class="text-center">
                                             @if (item.Statut == "Saisi")
@@ -154,7 +154,7 @@
                                     <tr>
                                         <td><span class="badge bg-dark">@item.NumeroFeuilleLigne</span></td>
                                         <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
-                                        <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.NumeroVol))</td>
+                                        <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.FN_NUMBER))</td>
                                         <td class="text-muted fst-italic">-</td>
                                         <td class="text-end fw-bold text-warning">@item.ChiffreAffairesEUR.ToString("F2") €</td>
                                         <td class="text-center">
@@ -187,12 +187,138 @@
                 <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-outline-secondary">
                     🎁 Saisir offres à bord
                 </a>
-                <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-outline-secondary disabled" style="cursor: not-allowed;">
-                    📦 État ventes FRS
+                <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-outline-primary">
+                    📦 Saisir ventes FRS
                 </a>
-                <a asp-controller="Agent" asp-action="SaisirOffresFRS" class="btn btn-outline-secondary disabled" style="cursor: not-allowed;">
-                    📦 État offres FRS
+                <a asp-controller="Agent" asp-action="SaisirOffresFRS" class="btn btn-outline-warning text-dark">
+                    📦 Saisir offres FRS
                 </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau des dernières Saisies Ventes FRS -->
+<div class="row g-4 mt-2">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold text-white" style="background:#0275d8;">
+                📦 Mes dernières saisies de ventes FRS
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.DerniersEtatsFRS.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        <div style="font-size:2.5rem;">📦</div>
+                        <p class="mt-2 small">Aucune saisie de vente FRS pour le moment.</p>
+                        <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-primary btn-sm fw-bold">
+                            + Saisir vente FRS
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N° État FRS</th>
+                                    <th>Date Réception</th>
+                                    <th>FL PNC Associée</th>
+                                    <th class="text-end">Montant FRS (€)</th>
+                                    <th class="text-center">Statut Contrôle</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.DerniersEtatsFRS)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-primary fs-6">@item.NumeroEtat</span></td>
+                                        <td>@item.DateReception.ToString("dd/MM/yyyy")</td>
+                                        <td><span class="badge bg-secondary">@(item.EtatDesVentes?.NumeroFeuilleLigne ?? "N/A")</span></td>
+                                        <td class="text-end fw-bold text-primary">@item.MontantFRS.ToString("F2") €</td>
+                                        <td class="text-center">
+                                            @if (item.StatutControle == "En attente")
+                                            {
+                                                <span class="badge bg-warning text-dark">⏳ En attente</span>
+                                            }
+                                            else if (item.StatutControle == "Conforme")
+                                            {
+                                                <span class="badge bg-success">✅ Conforme</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">⚠️ Écart</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau des dernières Saisies Offres FRS -->
+<div class="row g-4 mt-2 mb-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold text-white" style="background:#f0ad4e;">
+                📦 Mes dernières saisies d'offres FRS
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.DerniersEtatsOffresFRS.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        <div style="font-size:2.5rem;">🎁</div>
+                        <p class="mt-2 small">Aucune saisie d'offre FRS pour le moment.</p>
+                        <a asp-controller="Agent" asp-action="SaisirOffresFRS" class="btn btn-warning btn-sm fw-bold text-dark">
+                            + Saisir offre FRS
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N° État FRS</th>
+                                    <th>Date Réception</th>
+                                    <th>FL PNC Associée</th>
+                                    <th class="text-center">Statut Contrôle</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.DerniersEtatsOffresFRS)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-warning text-dark fs-6">@item.NumeroEtat</span></td>
+                                        <td>@item.DateReception.ToString("dd/MM/yyyy")</td>
+                                        <td><span class="badge bg-secondary">@(item.EtatDesOffres?.NumeroFeuilleLigne ?? "N/A")</span></td>
+                                        <td class="text-center">
+                                            @if (item.StatutControle == "En attente")
+                                            {
+                                                <span class="badge bg-warning text-dark">⏳ En attente</span>
+                                            }
+                                            else if (item.StatutControle == "Conforme")
+                                            {
+                                                <span class="badge bg-success">✅ Conforme</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">⚠️ Écart</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         </div>
     </div>

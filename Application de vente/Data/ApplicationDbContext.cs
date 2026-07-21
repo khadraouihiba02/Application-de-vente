@@ -25,8 +25,13 @@ namespace ApplicationDeVente.Data
         public DbSet<EtatDesOffres> EtatsDesOffres { get; set; }
         public DbSet<LigneOffre> LignesOffres { get; set; }
 
+        // Module FRS
+        public DbSet<EtatDesVentesFRS> EtatsDesVentesFRS { get; set; }
+        public DbSet<LigneVenteFRS> LignesVentesFRS { get; set; }
+        public DbSet<EtatDesOffresFRS> EtatsDesOffresFRS { get; set; }
+        public DbSet<LigneOffreFRS> LignesOffresFRS { get; set; }
+
         // Tables de liaison (Refonte)
-        public DbSet<CrewAssignment> CrewAssignments { get; set; }
         public DbSet<EtatDesVentesVol> EtatDesVentesVols { get; set; }
         public DbSet<EtatDesOffresVol> EtatDesOffresVols { get; set; }
 
@@ -77,6 +82,19 @@ namespace ApplicationDeVente.Data
 
             builder.Entity<LigneOffre>()
                 .Property(l => l.PrixUnitairePromoEUR)
+                .HasColumnType("decimal(18,2)");
+
+            // Configurations FRS
+            builder.Entity<EtatDesVentesFRS>()
+                .Property(e => e.MontantFRS)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<LigneVenteFRS>()
+                .Property(l => l.PrixUnitaireFRS)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<LigneVenteFRS>()
+                .Property(l => l.ValeurFRS)
                 .HasColumnType("decimal(18,2)");
         }
     }

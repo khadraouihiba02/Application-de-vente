@@ -1,0 +1,257 @@
+@model ApplicationDeVente.Models.ViewModels.ControleAgentFRSViewModel
+@{
+    ViewData["Title"] = "Contrôle Agent / FRS";
+    string filtre = ViewBag.Filtre ?? "tous";
+    string search = ViewBag.Search ?? "";
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h4 class="fw-bold mb-0">🔍 Contrôle Agent / FRS</h4>
+        <small class="text-muted">Comparaison des saisies Agent (PNC) avec les factures FRS du fournisseur.</small>
+    </div>
+</div>
+
+<!-- Filtres et Recherche -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Controle" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" name="search" value="@search" class="form-control" placeholder="🔎 Rechercher par N° FL..." />
+            </div>
+            <div class="col-auto">
+                <div class="btn-group">
+                    <a href="@Url.Action("Controle", new { filtre = "tous", search })" class="btn btn-sm @(filtre == "tous" ? "btn-dark" : "btn-outline-secondary")">Tous</a>
+                    <a href="@Url.Action("Controle", new { filtre = "sansifrs", search })" class="btn btn-sm @(filtre == "sansifrs" ? "btn-danger" : "btn-outline-danger")">Sans FRS</a>
+                    <a href="@Url.Action("Controle", new { filtre = "avecfrs", search })" class="btn btn-sm @(filtre == "avecfrs" ? "btn-primary" : "btn-outline-primary")">Avec FRS</a>
+                    <a href="@Url.Action("Controle", new { filtre = "conforme", search })" class="btn btn-sm @(filtre == "conforme" ? "btn-success" : "btn-outline-success")">Conforme</a>
+                    <a href="@Url.Action("Controle", new { filtre = "ecart", search })" class="btn btn-sm @(filtre == "ecart" ? "btn-warning text-dark" : "btn-outline-warning")">Écart</a>
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-primary">Rechercher</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (TempData["Succes"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        ✅ @TempData["Succes"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Statistiques rapides -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3" style="border-top: 4px solid #d9230f;">
+            <div class="fw-bold fs-4">@Model.EtatsVentes.Count</div>
+            <small class="text-muted">États de ventes PNC</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3" style="border-top: 4px solid #0275d8;">
+            <div class="fw-bold fs-4 text-primary">@Model.EtatsFRS.Count</div>
+            <small class="text-muted">Avec saisie FRS</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3" style="border-top: 4px solid #d9534f;">
+            <div class="fw-bold fs-4 text-danger">@(Model.EtatsVentes.Count - Model.EtatsFRS.Count)</div>
+            <small class="text-muted">Sans saisie FRS</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3" style="border-top: 4px solid #f0ad4e;">
+            <div class="fw-bold fs-4 text-warning">@Model.EtatsFRS.Values.Count(f => f.StatutControle == "En attente")</div>
+            <small class="text-muted">En attente de contrôle</small>
+        </div>
+    </div>
+</div>
+
+@if (!Model.EtatsVentes.Any())
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+            <div style="font-size:3rem;">📭</div>
+            <p class="mt-2">Aucun état de vente trouvé avec ce filtre.</p>
+        </div>
+    </div>
+}
+else
+{
+    @foreach (var etatVente in Model.EtatsVentes)
+    {
+        var hasFRS = Model.EtatsFRS.ContainsKey(etatVente.Id);
+        var frs = hasFRS ? Model.EtatsFRS[etatVente.Id] : null;
+        var ecart = hasFRS ? (frs!.MontantFRS - etatVente.ChiffreAffairesEUR) : (decimal?)null;
+        var isConforme = hasFRS && Math.Abs(ecart!.Value) < 0.01m;
+        var borderColor = !hasFRS ? "#d9534f" : (frs!.StatutControle == "Conforme" ? "#5cb85c" : (frs.StatutControle == "En attente" ? "#f0ad4e" : "#d9534f"));
+
+    <div class="card border-0 shadow-sm mb-3" style="border-left: 5px solid @borderColor;">
+        <div class="card-header d-flex justify-content-between align-items-center py-2 bg-light">
+            <div>
+                <span class="fw-bold fs-5">FL : @etatVente.NumeroFeuilleLigne</span>
+                <span class="ms-2 text-muted small">@etatVente.DateVol.ToString("dd/MM/yyyy")</span>
+                @{
+                    var volNum = etatVente.VolsList.FirstOrDefault()?.Vol?.FN_NUMBER;
+                }
+                @if (volNum != null)
+                {
+                    <span class="badge bg-secondary ms-2">✈️ @volNum</span>
+                }
+                @if (etatVente.PNCVendeur != null)
+                {
+                    <span class="badge bg-dark ms-1">👤 @etatVente.PNCVendeur.name @etatVente.PNCVendeur.First_name</span>
+                }
+            </div>
+            <div>
+                @if (!hasFRS)
+                {
+                    <span class="badge bg-danger fs-6">⛔ Sans FRS</span>
+                }
+                else if (frs!.StatutControle == "Conforme")
+                {
+                    <span class="badge bg-success fs-6">✅ Conforme</span>
+                }
+                else if (frs.StatutControle == "En attente")
+                {
+                    <span class="badge bg-warning text-dark fs-6">⏳ En attente</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger fs-6">⚠️ Écart détecté</span>
+                }
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <!-- Colonne Agent (PNC) -->
+                <div class="col-md-6 border-end p-3">
+                    <h6 class="fw-bold text-dark mb-2">📋 Saisie Agent (PNC)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-2">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Article</th>
+                                    <th class="text-center">Qté</th>
+                                    <th class="text-end">Prix U.</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ligne in etatVente.Lignes)
+                                {
+                                    <tr>
+                                        <td class="small">@(ligne.Article?.CodeArticle ?? "?")</td>
+                                        <td class="text-center">@ligne.QuantiteVendue</td>
+                                        <td class="text-end">@ligne.PrixUnitaireEUR.ToString("F2") €</td>
+                                        <td class="text-end fw-bold">@((ligne.QuantiteVendue * ligne.PrixUnitaireEUR).ToString("F2")) €</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-2">
+                        <span class="fw-bold">Total Agent :</span>
+                        <span class="fw-bold text-primary fs-6">@etatVente.ChiffreAffairesEUR.ToString("F2") €</span>
+                    </div>
+                </div>
+
+                <!-- Colonne FRS -->
+                <div class="col-md-6 p-3">
+                    <h6 class="fw-bold text-dark mb-2">📦 Saisie FRS (Fournisseur)</h6>
+                    @if (!hasFRS)
+                    {
+                        <div class="text-center text-muted py-4">
+                            <div style="font-size:2rem;">❌</div>
+                            <p class="small mb-0">Aucune saisie FRS pour cet état.</p>
+                            <small class="text-danger">L'agent FRS n'a pas encore saisi les données correspondantes.</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-2">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Article</th>
+                                        <th class="text-center">Qté</th>
+                                        <th class="text-end">Prix U. FRS</th>
+                                        <th class="text-end">Valeur</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ligne in frs!.Lignes)
+                                    {
+                                        <tr>
+                                            <td class="small">@ligne.CodeArticle</td>
+                                            <td class="text-center">@ligne.QuantiteVendueFRS</td>
+                                            <td class="text-end">@ligne.PrixUnitaireFRS.ToString("F2") €</td>
+                                            <td class="text-end fw-bold">@ligne.ValeurFRS.ToString("F2") €</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-2 mb-2">
+                            <span class="fw-bold">Total FRS :</span>
+                            <span class="fw-bold text-secondary fs-6">@frs.MontantFRS.ToString("F2") €</span>
+                        </div>
+
+                        <!-- Écart -->
+                        <div class="alert @(isConforme ? "alert-success" : "alert-danger") py-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Écart Agent / FRS :</span>
+                                <span class="fw-bold fs-6">
+                                    @(ecart >= 0 ? "+" : "")@ecart.Value.ToString("F2") €
+                                    @(isConforme ? "✅ Aucun écart" : "⚠️ Écart détecté")
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Actions de validation -->
+                        @if (frs.StatutControle == "En attente")
+                        {
+                            <div class="d-flex gap-2 justify-content-end">
+                                <form method="post" asp-action="ValiderControle" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="frsId" value="@frs.Id" />
+                                    <input type="hidden" name="statut" value="Conforme" />
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                        ✅ Valider Conforme
+                                    </button>
+                                </form>
+                                <form method="post" asp-action="ValiderControle" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="frsId" value="@frs.Id" />
+                                    <input type="hidden" name="statut" value="Écart" />
+                                    <button type="submit" class="btn btn-sm btn-danger fw-bold">
+                                        ⚠️ Signaler Écart
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-end">
+                                <form method="post" asp-action="ValiderControle" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="frsId" value="@frs.Id" />
+                                    <input type="hidden" name="statut" value="En attente" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                        🔄 Remettre En attente
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+}

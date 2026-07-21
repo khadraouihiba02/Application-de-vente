@@ -7,27 +7,32 @@
     <div class="col-md-6">
         <div class="card shadow-sm border-0">
             <div class="card-header fw-bold text-white" style="background:#d9230f;">
-                ✏️ Modifier le Vol — @Model.NumeroVol
+                ✏️ Modifier le Vol — @Model.FN_NUMBER
             </div>
             <div class="card-body p-4">
                 <form asp-action="Modifier" method="post">
                     <input type="hidden" asp-for="Id" />
                     
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label asp-for="NumeroVol" class="form-label fw-semibold"></label>
-                            <input asp-for="NumeroVol" class="form-control" style="text-transform:uppercase;" />
-                            <span asp-validation-for="NumeroVol" class="text-danger small"></span>
+                        <div class="col-md-6">
+                            <label asp-for="FN_NUMBER" class="form-label fw-semibold"></label>
+                            <input asp-for="FN_NUMBER" class="form-control" style="text-transform:uppercase;" />
+                            <span asp-validation-for="FN_NUMBER" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Origine" class="form-label fw-semibold"></label>
-                            <input asp-for="Origine" class="form-control" style="text-transform:uppercase;" maxlength="5" />
-                            <span asp-validation-for="Origine" class="text-danger small"></span>
+                            <label asp-for="DAY_OF_ORIGIN" class="form-label fw-semibold"></label>
+                            <input asp-for="DAY_OF_ORIGIN" class="form-control" type="date" />
+                            <span asp-validation-for="DAY_OF_ORIGIN" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Destination" class="form-label fw-semibold"></label>
-                            <input asp-for="Destination" class="form-control" style="text-transform:uppercase;" maxlength="5" />
-                            <span asp-validation-for="Destination" class="text-danger small"></span>
+                            <label asp-for="DEP_AP_ACTUAL" class="form-label fw-semibold"></label>
+                            <input asp-for="DEP_AP_ACTUAL" class="form-control" style="text-transform:uppercase;" maxlength="5" />
+                            <span asp-validation-for="DEP_AP_ACTUAL" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ARR_AP_ACTUAL" class="form-label fw-semibold"></label>
+                            <input asp-for="ARR_AP_ACTUAL" class="form-control" style="text-transform:uppercase;" maxlength="5" />
+                            <span asp-validation-for="ARR_AP_ACTUAL" class="text-danger small"></span>
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-switch">

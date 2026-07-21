@@ -16,20 +16,25 @@
                 <form asp-action="Creer" method="post">
                     @Html.AntiForgeryToken()
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label asp-for="NumeroVol" class="form-label fw-semibold"></label>
-                            <input asp-for="NumeroVol" class="form-control" placeholder="ex: TU202" style="text-transform:uppercase;" />
-                            <span asp-validation-for="NumeroVol" class="text-danger small"></span>
+                        <div class="col-md-6">
+                            <label asp-for="FN_NUMBER" class="form-label fw-semibold"></label>
+                            <input asp-for="FN_NUMBER" class="form-control" placeholder="ex: TU202" style="text-transform:uppercase;" />
+                            <span asp-validation-for="FN_NUMBER" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Origine" class="form-label fw-semibold"></label>
-                            <input asp-for="Origine" class="form-control" placeholder="ex: TUN" style="text-transform:uppercase;" maxlength="5" />
-                            <span asp-validation-for="Origine" class="text-danger small"></span>
+                            <label asp-for="DAY_OF_ORIGIN" class="form-label fw-semibold"></label>
+                            <input asp-for="DAY_OF_ORIGIN" class="form-control" type="date" />
+                            <span asp-validation-for="DAY_OF_ORIGIN" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Destination" class="form-label fw-semibold"></label>
-                            <input asp-for="Destination" class="form-control" placeholder="ex: CDG" style="text-transform:uppercase;" maxlength="5" />
-                            <span asp-validation-for="Destination" class="text-danger small"></span>
+                            <label asp-for="DEP_AP_ACTUAL" class="form-label fw-semibold"></label>
+                            <input asp-for="DEP_AP_ACTUAL" class="form-control" placeholder="ex: TUN" style="text-transform:uppercase;" maxlength="5" />
+                            <span asp-validation-for="DEP_AP_ACTUAL" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ARR_AP_ACTUAL" class="form-label fw-semibold"></label>
+                            <input asp-for="ARR_AP_ACTUAL" class="form-control" placeholder="ex: CDG" style="text-transform:uppercase;" maxlength="5" />
+                            <span asp-validation-for="ARR_AP_ACTUAL" class="text-danger small"></span>
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-switch">

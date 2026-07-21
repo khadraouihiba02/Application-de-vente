@@ -4,6 +4,7 @@ using ApplicationDeVente.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Application_de_vente.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260720153910_RefontePNCVol")]
+    partial class RefontePNCVol
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -94,37 +97,6 @@ namespace Application_de_vente.Migrations
                     b.ToTable("EtatsDesOffres");
                 });
 
-            modelBuilder.Entity("ApplicationDeVente.Models.EtatDesOffresFRS", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DateReception")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EtatDesOffresId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("NumeroEtat")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("StatutControle")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EtatDesOffresId");
-
-                    b.ToTable("EtatsDesOffresFRS");
-                });
-
             modelBuilder.Entity("ApplicationDeVente.Models.EtatDesOffresVol", b =>
                 {
                     b.Property<int>("Id")
@@ -191,40 +163,6 @@ namespace Application_de_vente.Migrations
                     b.ToTable("EtatsDesVentes");
                 });
 
-            modelBuilder.Entity("ApplicationDeVente.Models.EtatDesVentesFRS", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DateReception")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EtatDesVentesId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("MontantFRS")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("NumeroEtat")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("StatutControle")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EtatDesVentesId");
-
-                    b.ToTable("EtatsDesVentesFRS");
-                });
-
             modelBuilder.Entity("ApplicationDeVente.Models.EtatDesVentesVol", b =>
                 {
                     b.Property<int>("Id")
@@ -283,43 +221,6 @@ namespace Application_de_vente.Migrations
                     b.ToTable("LignesOffres");
                 });
 
-            modelBuilder.Entity("ApplicationDeVente.Models.LigneOffreFRS", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CodeArticle")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("DotationInitialeFRS")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EtatDesOffresFRSId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("NomArticle")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("QuantiteConsommeeFRS")
-                        .HasColumnType("int");
-
-                    b.Property<int>("QuantiteRestanteFRS")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EtatDesOffresFRSId");
-
-                    b.ToTable("LignesOffresFRS");
-                });
-
             modelBuilder.Entity("ApplicationDeVente.Models.LigneVente", b =>
                 {
                     b.Property<int>("Id")
@@ -353,43 +254,6 @@ namespace Application_de_vente.Migrations
                     b.HasIndex("EtatDesVentesId");
 
                     b.ToTable("LignesVentes");
-                });
-
-            modelBuilder.Entity("ApplicationDeVente.Models.LigneVenteFRS", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CodeArticle")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("EtatDesVentesFRSId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("NomArticle")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal>("PrixUnitaireFRS")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("QuantiteVendueFRS")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("ValeurFRS")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EtatDesVentesFRSId");
-
-                    b.ToTable("LignesVentesFRS");
                 });
 
             modelBuilder.Entity("ApplicationDeVente.Models.PNC", b =>
@@ -718,17 +582,6 @@ namespace Application_de_vente.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ApplicationDeVente.Models.EtatDesOffresFRS", b =>
-                {
-                    b.HasOne("ApplicationDeVente.Models.EtatDesOffres", "EtatDesOffres")
-                        .WithMany()
-                        .HasForeignKey("EtatDesOffresId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EtatDesOffres");
-                });
-
             modelBuilder.Entity("ApplicationDeVente.Models.EtatDesOffresVol", b =>
                 {
                     b.HasOne("ApplicationDeVente.Models.EtatDesOffres", "EtatDesOffres")
@@ -757,17 +610,6 @@ namespace Application_de_vente.Migrations
                         .IsRequired();
 
                     b.Navigation("PNCVendeur");
-                });
-
-            modelBuilder.Entity("ApplicationDeVente.Models.EtatDesVentesFRS", b =>
-                {
-                    b.HasOne("ApplicationDeVente.Models.EtatDesVentes", "EtatDesVentes")
-                        .WithMany()
-                        .HasForeignKey("EtatDesVentesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EtatDesVentes");
                 });
 
             modelBuilder.Entity("ApplicationDeVente.Models.EtatDesVentesVol", b =>
@@ -808,17 +650,6 @@ namespace Application_de_vente.Migrations
                     b.Navigation("EtatDesOffres");
                 });
 
-            modelBuilder.Entity("ApplicationDeVente.Models.LigneOffreFRS", b =>
-                {
-                    b.HasOne("ApplicationDeVente.Models.EtatDesOffresFRS", "EtatDesOffresFRS")
-                        .WithMany("Lignes")
-                        .HasForeignKey("EtatDesOffresFRSId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EtatDesOffresFRS");
-                });
-
             modelBuilder.Entity("ApplicationDeVente.Models.LigneVente", b =>
                 {
                     b.HasOne("ApplicationDeVente.Models.Article", "Article")
@@ -836,17 +667,6 @@ namespace Application_de_vente.Migrations
                     b.Navigation("Article");
 
                     b.Navigation("EtatDesVentes");
-                });
-
-            modelBuilder.Entity("ApplicationDeVente.Models.LigneVenteFRS", b =>
-                {
-                    b.HasOne("ApplicationDeVente.Models.EtatDesVentesFRS", "EtatDesVentesFRS")
-                        .WithMany("Lignes")
-                        .HasForeignKey("EtatDesVentesFRSId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EtatDesVentesFRS");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -907,21 +727,11 @@ namespace Application_de_vente.Migrations
                     b.Navigation("VolsList");
                 });
 
-            modelBuilder.Entity("ApplicationDeVente.Models.EtatDesOffresFRS", b =>
-                {
-                    b.Navigation("Lignes");
-                });
-
             modelBuilder.Entity("ApplicationDeVente.Models.EtatDesVentes", b =>
                 {
                     b.Navigation("Lignes");
 
                     b.Navigation("VolsList");
-                });
-
-            modelBuilder.Entity("ApplicationDeVente.Models.EtatDesVentesFRS", b =>
-                {
-                    b.Navigation("Lignes");
                 });
 #pragma warning restore 612, 618
         }
