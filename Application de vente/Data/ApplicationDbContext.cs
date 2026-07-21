@@ -35,6 +35,10 @@ namespace ApplicationDeVente.Data
         public DbSet<EtatDesVentesVol> EtatDesVentesVols { get; set; }
         public DbSet<EtatDesOffresVol> EtatDesOffresVols { get; set; }
 
+        // Module Catering
+        public DbSet<Facture> Factures { get; set; }
+        public DbSet<RedevanceMensuelle> Redevances { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -95,6 +99,27 @@ namespace ApplicationDeVente.Data
 
             builder.Entity<LigneVenteFRS>()
                 .Property(l => l.ValeurFRS)
+                .HasColumnType("decimal(18,2)");
+
+            // Configurations Catering
+            builder.Entity<Facture>()
+                .Property(f => f.Montant)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<RedevanceMensuelle>()
+                .Property(r => r.ChiffreAffairesTotal)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<RedevanceMensuelle>()
+                .Property(r => r.MontantMinGaranti)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<RedevanceMensuelle>()
+                .Property(r => r.MontantPourcentage)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<RedevanceMensuelle>()
+                .Property(r => r.MontantRetenu)
                 .HasColumnType("decimal(18,2)");
         }
     }

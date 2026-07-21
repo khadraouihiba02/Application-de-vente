@@ -1,0 +1,145 @@
+@model ApplicationDeVente.Models.RedevanceMensuelle
+@{
+    ViewData["Title"] = "Redevance Mensuelle";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-file-invoice-dollar text-success me-2"></i>Redevance Mensuelle
+        </h1>
+    </div>
+
+    @if (TempData["Succes"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Succes"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Filtre Mois/Année -->
+    <div class="card shadow mb-4 d-print-none">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Mois</label>
+                    <select name="mois" class="form-select">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <option value="@i" selected="@(Model?.Mois == i ? "selected" : null)">
+                                @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Année</label>
+                    <select name="annee" class="form-select">
+                        @for (int i = DateTime.Today.Year - 2; i <= DateTime.Today.Year + 1; i++)
+                        {
+                            <option value="@i" selected="@(Model?.Annee == i ? "selected" : null)">@i</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calculator me-1"></i> Calculer / Afficher
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model != null)
+    {
+        <div class="card shadow border-left-success">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center bg-light">
+                <h6 class="m-0 font-weight-bold text-success">
+                    Détail de la redevance - @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Mois) @Model.Annee
+                </h6>
+                <span class="badge @(Model.Id > 0 ? "bg-success" : "bg-warning text-dark")">
+                    @(Model.Id > 0 ? "Sauvegardée" : "Aperçu non sauvegardé")
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th class="w-50 text-muted">Nombre passagers transportés :</th>
+                                    <td class="fw-bold">@Model.NombrePassagers</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Chiffre d'Affaires Réel :</th>
+                                    <td class="fw-bold">@Model.ChiffreAffairesTotal.ToString("F2") €</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <!-- Méthode 1 -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-primary @(Model.MontantMinGaranti >= Model.MontantPourcentage ? "bg-primary-subtle" : "")">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary"><i class="fas fa-users me-2"></i>Méthode 1 : Minimum Garanti</h5>
+                                <p class="card-text text-muted mb-3">Basé sur 1.10 € par passager transporté.</p>
+                                <h3 class="text-dark">@Model.MontantMinGaranti.ToString("F2") €</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Méthode 2 -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-info @(Model.MontantPourcentage > Model.MontantMinGaranti ? "bg-info-subtle" : "")">
+                            <div class="card-body">
+                                <h5 class="card-title text-info"><i class="fas fa-chart-line me-2"></i>Méthode 2 : Pourcentage</h5>
+                                <p class="card-text text-muted mb-3">Basé sur 42% du Chiffre d'Affaires réalisé.</p>
+                                <h3 class="text-dark">@Model.MontantPourcentage.ToString("F2") €</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success d-flex align-items-center mb-4">
+                    <i class="fas fa-check-circle fa-2x me-3"></i>
+                    <div>
+                        <h4 class="alert-heading mb-1">Montant Retenu : <strong>@Model.MontantRetenu.ToString("F2") €</strong></h4>
+                        <p class="mb-0">Méthode la plus favorable : @Model.MethodeAppliquee</p>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 d-print-none">
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Imprimer
+                    </button>
+                    @if (Model.Id == 0)
+                    {
+                        <form method="post" asp-action="SauvegarderRedevance">
+                            <input type="hidden" name="Mois" value="@Model.Mois" />
+                            <input type="hidden" name="Annee" value="@Model.Annee" />
+                            <input type="hidden" name="NombrePassagers" value="@Model.NombrePassagers" />
+                            <input type="hidden" name="ChiffreAffairesTotal" value="@Model.ChiffreAffairesTotal.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                            <input type="hidden" name="MontantMinGaranti" value="@Model.MontantMinGaranti.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                            <input type="hidden" name="MontantPourcentage" value="@Model.MontantPourcentage.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                            <input type="hidden" name="MontantRetenu" value="@Model.MontantRetenu.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                            <input type="hidden" name="MethodeAppliquee" value="@Model.MethodeAppliquee" />
+                            
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Sauvegarder & Figer
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" type="button">
+                            <i class="fas fa-envelope me-1"></i> Établir Demande de Facturation DCF
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

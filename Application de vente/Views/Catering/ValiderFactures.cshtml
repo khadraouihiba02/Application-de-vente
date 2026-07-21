@@ -1,0 +1,208 @@
+@model ApplicationDeVente.Models.ViewModels.ValiderFacturesViewModel
+@{
+    ViewData["Title"] = "Valider Factures";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-file-signature text-primary me-2"></i>Valider Factures
+        </h1>
+        <div class="btn-group">
+            <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#importFactureModal">
+                <i class="fas fa-file-import me-1"></i> Importer
+            </button>
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#newFactureModal">
+                <i class="fas fa-plus me-1"></i> Nouvelle Facture Manuelle
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["Succes"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Succes"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Erreur"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Erreur"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow mb-4 border-left-warning">
+        <div class="card-header py-3 bg-light d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-warning text-dark"><i class="fas fa-clock me-2"></i>Factures en attente de validation</h6>
+            <span class="badge bg-warning text-dark rounded-pill">@Model.FacturesEnAttente.Count</span>
+        </div>
+        <div class="card-body">
+            @if (!Model.FacturesEnAttente.Any())
+            {
+                <div class="alert alert-secondary mb-0">Aucune facture en attente de validation.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N° Facture</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th class="text-end">Montant (EUR)</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var f in Model.FacturesEnAttente)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@f.NumeroFacture</td>
+                                    <td>@f.DateFacture.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <span class="badge bg-secondary">@f.Type</span>
+                                    </td>
+                                    <td class="text-end fw-bold">@f.Montant.ToString("F2") €</td>
+                                    <td class="text-center">
+                                        <form method="post" asp-action="ChangerStatutFacture" class="d-inline">
+                                            <input type="hidden" name="id" value="@f.Id" />
+                                            <input type="hidden" name="statut" value="Validée" />
+                                            <button type="submit" class="btn btn-sm btn-success" title="Approuver (Bon à payer)">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" asp-action="ChangerStatutFacture" class="d-inline ms-1">
+                                            <input type="hidden" name="id" value="@f.Id" />
+                                            <input type="hidden" name="statut" value="Rejetée" />
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Rejeter">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow mb-4 border-left-info">
+        <div class="card-header py-3 bg-light">
+            <h6 class="m-0 font-weight-bold text-info text-dark"><i class="fas fa-history me-2"></i>Historique des factures traitées</h6>
+        </div>
+        <div class="card-body">
+            @if (!Model.HistoriqueFactures.Any())
+            {
+                <p class="text-muted mb-0">Aucun historique disponible.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>N° Facture</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th class="text-end">Montant</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var f in Model.HistoriqueFactures)
+                            {
+                                <tr>
+                                    <td>@f.NumeroFacture</td>
+                                    <td>@f.DateFacture.ToString("dd/MM/yyyy")</td>
+                                    <td>@f.Type</td>
+                                    <td class="text-end">@f.Montant.ToString("F2") €</td>
+                                    <td>
+                                        @if (f.Statut == "Validée")
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-check me-1"></i> Validée</span>
+                                        }
+                                        else if (f.Statut == "Rejetée")
+                                        {
+                                            <span class="badge bg-danger"><i class="fas fa-times me-1"></i> Rejetée</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@f.Statut</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal simulation (pour que l'utilisateur puisse tester l'ajout d'une facture) -->
+<div class="modal fade" id="newFactureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Simuler une réception de Facture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Dans un environnement réel, ces factures proviendraient de l'ERP ou du concessionnaire.</p>
+                <form action="/Catering/SimulerAjoutFacture" method="post" id="formAddFacture">
+                    <div class="mb-3">
+                        <label class="form-label">Numéro Facture</label>
+                        <input type="text" class="form-control" name="NumeroFacture" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" name="Type">
+                            <option value="Offres à bord">Offres à bord</option>
+                            <option value="Déficit de caisse">Déficit de caisse</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Montant (EUR)</label>
+                        <input type="number" step="0.01" class="form-control" name="Montant" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="formAddFacture" class="btn btn-primary">Créer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Import CSV -->
+<div class="modal fade" id="importFactureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Importer des factures (CSV)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Sélectionnez un fichier CSV contenant les colonnes : <code>NumeroFacture, Type, Montant</code></p>
+                <form action="/Catering/ImporterFactures" method="post" enctype="multipart/form-data" id="formImportFacture">
+                    <div class="mb-3">
+                        <label class="form-label">Fichier CSV</label>
+                        <input type="file" class="form-control" name="fichierCsv" accept=".csv" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="formImportFacture" class="btn btn-success">Importer</button>
+            </div>
+        </div>
+    </div>
+</div>
