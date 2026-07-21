@@ -1,3 +1,4 @@
+@model ApplicationDeVente.Models.ViewModels.DCFDashboardViewModel
 @{
     ViewData["Title"] = "Tableau de bord — DCF";
     var mois = DateTime.Now.ToString("MMMM yyyy");
@@ -11,39 +12,40 @@
     </div>
 </div>
 
+<!-- Statistiques dynamiques -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #d9230f;">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #d9230f !important; border-top-width: 4px !important;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">📄</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2 text-danger">@Model.NbFacturesEnAttente</div>
                 <div class="text-muted small">Factures en attente</div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #4CAF50;">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #4CAF50 !important;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">✅</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2 text-success">@Model.NbFacturesValidees</div>
                 <div class="text-muted small">Factures validées</div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #FF9800;">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #FF9800 !important;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">💳</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2 text-warning">@Model.NbBordereauxATraiter</div>
                 <div class="text-muted small">Bordereaux à traiter</div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #607D8B;">
+        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #607D8B !important;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">🗄️</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2">@Model.NbDocumentsArchives</div>
                 <div class="text-muted small">Documents archivés</div>
             </div>
         </div>
@@ -56,14 +58,65 @@
             <div class="card-header fw-bold" style="background:#d9230f; color:white;">
                 📄 Dernières factures reçues
             </div>
-            <div class="card-body">
-                <div class="text-center text-muted py-4">
-                    <div style="font-size:3rem;">📭</div>
-                    <p class="mt-2">Aucune facture en attente de validation.</p>
-                    <a asp-controller="DCF" asp-action="TrousDeCaisse" class="btn btn-warning btn-sm fw-bold text-dark">
-                        ⚠️ Voir les trous de caisse
-                    </a>
-                </div>
+            <div class="card-body p-0">
+                @if (!Model.DernieresFactures.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        <div style="font-size:3rem;">📭</div>
+                        <p class="mt-2">Aucune facture en attente de validation.</p>
+                        <a asp-controller="DCF" asp-action="TrousDeCaisse" class="btn btn-warning btn-sm fw-bold text-dark">
+                            ⚠️ Voir les trous de caisse
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N° Facture</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th class="text-end">Montant</th>
+                                <th class="text-center">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var f in Model.DernieresFactures)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@f.NumeroFacture</td>
+                                    <td>@f.DateFacture.ToString("dd/MM/yyyy")</td>
+                                    <td><span class="badge bg-secondary">@f.Type</span></td>
+                                    <td class="text-end">@f.Montant.ToString("F2") €</td>
+                                    <td class="text-center">
+                                        @if (f.Statut == "En attente")
+                                        {
+                                            <span class="badge bg-warning text-dark">@f.Statut</span>
+                                        }
+                                        else if (f.Statut == "Validée")
+                                        {
+                                            <span class="badge bg-success">@f.Statut</span>
+                                        }
+                                        else if (f.Statut == "Payée")
+                                        {
+                                            <span class="badge bg-primary">@f.Statut</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">@f.Statut</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <div class="text-end p-2">
+                        <a asp-controller="DCF" asp-action="Bordereaux" class="btn btn-sm btn-outline-primary">
+                            Voir tous les bordereaux →
+                        </a>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -75,7 +128,7 @@
                 <a asp-controller="DCF" asp-action="TrousDeCaisse" class="btn btn-warning fw-bold text-dark">
                     ⚠️ Trous de caisse
                 </a>
-                <a asp-controller="DCF" asp-action="Bordereaux" class="btn btn-outline-secondary">
+                <a asp-controller="DCF" asp-action="Bordereaux" class="btn btn-outline-primary">
                     💳 Bordereaux règlement
                 </a>
                 <a asp-controller="DCF" asp-action="Archivage" class="btn btn-outline-secondary">
@@ -90,10 +143,10 @@
             </div>
             <div class="card-body">
                 <ol class="small text-muted ps-3 mb-0">
-                    <li class="mb-1">Réceptionner les factures de la DCF</li>
-                    <li class="mb-1">Vérifier et valider avec le Bon à payer</li>
-                    <li class="mb-1">Approuver dans le système ERP</li>
-                    <li class="mb-1">Établir le bordereau de règlement</li>
+                    <li class="mb-1">Réceptionner les factures validées par Catering</li>
+                    <li class="mb-1">Vérifier et établir le Bon à payer</li>
+                    <li class="mb-1">Générer le bordereau de règlement</li>
+                    <li class="mb-1">Clôturer et valider le règlement</li>
                     <li>Archiver les documents finaux</li>
                 </ol>
             </div>

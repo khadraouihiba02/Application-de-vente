@@ -1,0 +1,153 @@
+@model ApplicationDeVente.Models.ViewModels.BordereauViewModel
+@{
+    ViewData["Title"] = "Bordereaux de Règlement";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-file-invoice text-primary me-2"></i>Bordereaux de Règlement
+        </h1>
+    </div>
+
+    <!-- Filtre Mois/Année -->
+    <div class="card shadow mb-4 d-print-none">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Mois</label>
+                    <select name="mois" class="form-select">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <option value="@i" selected="@(Model.Mois == i ? "selected" : null)">
+                                @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Année</label>
+                    <select name="annee" class="form-select">
+                        @for (int i = DateTime.Today.Year - 2; i <= DateTime.Today.Year + 1; i++)
+                        {
+                            <option value="@i" selected="@(Model.Annee == i ? "selected" : null)">@i</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i> Charger
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary ms-2" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Imprimer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["Succes"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Succes"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.FacturesIncluses.Any())
+    {
+        <div class="alert alert-info d-flex align-items-center">
+            <i class="fas fa-info-circle fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-0">Aucune facture validée pour @Model.NomMois @Model.Annee</h5>
+                <small>Les factures doivent d'abord être validées par la Direction Catering avant d'apparaître ici.</small>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- En-tête du Bordereau (style document officiel) -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-dark text-white py-3">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-file-invoice me-2"></i>BORDEREAU DE RÈGLEMENT</h5>
+                        <small class="opacity-75">N° @Model.NumeroBordereau</small>
+                    </div>
+                    <div class="col-auto text-end">
+                        <div class="fw-bold">@Model.NomMois @Model.Annee</div>
+                        <small class="opacity-75">Généré le @Model.DateGeneration.ToString("dd/MM/yyyy")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>N° Facture</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th class="text-end">Montant (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int ligne = 1; }
+                            @foreach (var f in Model.FacturesIncluses)
+                            {
+                                <tr>
+                                    <td class="text-muted">@ligne</td>
+                                    <td class="fw-bold">@f.NumeroFacture</td>
+                                    <td>@f.DateFacture.ToString("dd/MM/yyyy")</td>
+                                    <td><span class="badge bg-secondary">@f.Type</span></td>
+                                    <td class="text-end fw-bold">@f.Montant.ToString("F2") €</td>
+                                </tr>
+                                ligne++;
+                            }
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold fs-5">TOTAL À RÉGLER :</td>
+                                <td class="text-end fw-bold fs-5 text-warning">@Model.TotalMontant.ToString("F2") €</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 text-center">
+                            <p class="text-muted mb-4">Signature Direction Catering</p>
+                            <div style="border-top: 1px solid #ccc; margin-top: 40px; padding-top: 5px;">
+                                <small class="text-muted">Nom & Cachet</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 text-center">
+                            <p class="text-muted mb-4">Signature Direction Financière (DCF)</p>
+                            <div style="border-top: 1px solid #ccc; margin-top: 40px; padding-top: 5px;">
+                                <small class="text-muted">Nom & Cachet</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 d-print-none">
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Imprimer le Bordereau
+                    </button>
+                    <form method="post" asp-action="ValiderBordereau">
+                        <input type="hidden" name="mois" value="@Model.Mois" />
+                        <input type="hidden" name="annee" value="@Model.Annee" />
+                        <button type="submit" class="btn btn-success fw-bold"
+                                onclick="return confirm('Confirmer le règlement de toutes ces factures ?')">
+                            <i class="fas fa-check-double me-1"></i> Valider le Règlement (Clôturer)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

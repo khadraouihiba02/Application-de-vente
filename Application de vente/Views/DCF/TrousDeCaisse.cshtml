@@ -1,0 +1,122 @@
+@model ApplicationDeVente.Models.ViewModels.TrousDeCaisseViewModel
+@{
+    ViewData["Title"] = "Trous de Caisse";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Trous de Caisse
+        </h1>
+    </div>
+
+    <!-- Filtre Mois/Année -->
+    <div class="card shadow mb-4 d-print-none">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Mois</label>
+                    <select name="mois" class="form-select">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <option value="@i" selected="@(Model.Mois == i ? "selected" : null)">
+                                @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Année</label>
+                    <select name="annee" class="form-select">
+                        @for (int i = DateTime.Today.Year - 2; i <= DateTime.Today.Year + 1; i++)
+                        {
+                            <option value="@i" selected="@(Model.Annee == i ? "selected" : null)">@i</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-warning fw-bold">
+                        <i class="fas fa-search me-1"></i> Filtrer
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary ms-2" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Imprimer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model.Trous.Any())
+    {
+        <div class="alert alert-success d-flex align-items-center">
+            <i class="fas fa-check-circle fa-2x me-3 text-success"></i>
+            <div>
+                <h5 class="mb-0">Aucun trou de caisse détecté !</h5>
+                <small>Tous les PNC ont remis les montants exacts pour <strong>@Model.NomMois @Model.Annee</strong>.</small>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger d-flex align-items-center mb-4">
+            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-0">@Model.Trous.Count trou(s) de caisse détecté(s) en @Model.NomMois @Model.Annee</h5>
+                <small>Déficit total : <strong>@Model.TotalDeficit.ToString("F3") TND</strong></small>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header py-3 bg-danger text-white">
+                <h6 class="m-0 fw-bold"><i class="fas fa-list me-2"></i>Détail des trous de caisse — @Model.NomMois @Model.Annee</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>N° FL</th>
+                                <th>Date Vol</th>
+                                <th>Matricule</th>
+                                <th>Nom PNC</th>
+                                <th class="text-end">Montant Théorique (TND)</th>
+                                <th class="text-end">Montant Réel (TND)</th>
+                                <th class="text-end text-danger">Déficit (TND)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model.Trous.OrderByDescending(x => x.Deficit))
+                            {
+                                <tr>
+                                    <td><strong>@t.NumeroFL</strong></td>
+                                    <td>@t.DateVol.ToString("dd/MM/yyyy")</td>
+                                    <td><span class="badge bg-secondary">@t.MatriculePNC</span></td>
+                                    <td>@t.NomPNC</td>
+                                    <td class="text-end">@t.MontantTheorique.ToString("F3")</td>
+                                    <td class="text-end">@t.MontantReel.ToString("F3")</td>
+                                    <td class="text-end fw-bold text-danger">@t.Deficit.ToString("F3")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light fw-bold">
+                            <tr>
+                                <td colspan="5" class="text-end">TOTAL DÉFICIT :</td>
+                                <td></td>
+                                <td class="text-end text-danger fs-5">@Model.TotalDeficit.ToString("F3") TND</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="mt-3 d-flex justify-content-end gap-2 d-print-none">
+                    <button class="btn btn-outline-danger" onclick="window.print()">
+                        <i class="fas fa-file-pdf me-1"></i> Imprimer le rapport
+                    </button>
+                    <button class="btn btn-warning fw-bold" type="button">
+                        <i class="fas fa-paper-plane me-1"></i> Transmettre à la Direction Gestion Paie
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
