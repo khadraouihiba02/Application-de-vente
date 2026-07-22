@@ -18,9 +18,12 @@ namespace ApplicationDeVente.Models.ViewModels
         [Display(Name = "État des Ventes PNC")]
         public int EtatDesVentesId { get; set; }
 
-        [Required(ErrorMessage = "Le montant FRS est obligatoire.")]
-        [Display(Name = "Montant FRS (EUR)")]
-        public decimal MontantFRS { get; set; } = 0;
+        public decimal TauxChangeApplique { get; set; } = 1;
+
+        [Required(ErrorMessage = "Le montant déclaré réel (TND) est obligatoire.")]
+        [Display(Name = "Montant Déclaré FRS (TND)")]
+        [DisplayFormat(DataFormatString = "{0:F3}")]
+        public decimal MontantDeclareReelTND { get; set; } = 0;
 
         // Liste des états des ventes PNC disponibles pour la liste déroulante
         public List<SelectListItem> EtatsPNCDisponibles { get; set; } = new();

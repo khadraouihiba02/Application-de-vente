@@ -21,6 +21,11 @@ namespace ApplicationDeVente.Models
         [Display(Name = "Montant FRS (EUR)")]
         public decimal MontantFRS { get; set; } = 0;
 
+        public decimal TauxChangeApplique { get; set; } = 1;
+        public decimal ChiffreAffairesEUR { get; set; } = 0;
+        public decimal MontantTheoriqueTND { get; set; } = 0;
+        public decimal MontantDeclareReelTND { get; set; } = 0;
+
         [StringLength(50)]
         [Display(Name = "Statut de Contrôle")]
         public string StatutControle { get; set; } = "En attente"; // Ex: "En attente", "Conforme", "Écart"

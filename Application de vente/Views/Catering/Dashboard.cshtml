@@ -16,7 +16,7 @@
         <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #d9230f;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">📋</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2">@(ViewBag.EtatsAValider ?? 0)</div>
                 <div class="text-muted small">États à valider</div>
             </div>
         </div>
@@ -25,7 +25,7 @@
         <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #FF5722;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">⚠️</div>
-                <div class="fw-bold fs-3 mt-2">0</div>
+                <div class="fw-bold fs-3 mt-2">@(ViewBag.TrousDeCaisse ?? 0)</div>
                 <div class="text-muted small">Trous de caisse détectés</div>
             </div>
         </div>
@@ -34,7 +34,7 @@
         <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #4CAF50;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">💶</div>
-                <div class="fw-bold fs-3 mt-2">0 €</div>
+                <div class="fw-bold fs-3 mt-2">@(((decimal)(ViewBag.CATotalMois ?? 0m)).ToString("N2")) €</div>
                 <div class="text-muted small">CA total du mois</div>
             </div>
         </div>
@@ -43,7 +43,7 @@
         <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #9C27B0;">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">🧾</div>
-                <div class="fw-bold fs-3 mt-2">0 €</div>
+                <div class="fw-bold fs-3 mt-2">@(((decimal)(ViewBag.RedevanceCalculee ?? 0m)).ToString("N2")) €</div>
                 <div class="text-muted small">Redevance calculée</div>
             </div>
         </div>

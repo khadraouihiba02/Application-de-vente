@@ -239,6 +239,7 @@ namespace ApplicationDeVente.Controllers
         public async Task<IActionResult> SaisirVentesFRS()
         {
             var vm = new SaisieVentesFRSViewModel();
+            var aujourdhui = DateTime.Today;
             
             var dejaSaisis = await _db.EtatsDesVentesFRS.Select(f => f.EtatDesVentesId).ToListAsync();
             
@@ -251,6 +252,12 @@ namespace ApplicationDeVente.Controllers
                     Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
                 })
                 .ToListAsync();
+
+            var tauxActif = await _db.TauxChanges
+                .Where(t => t.DeviseCible == "TND" && aujourdhui >= t.DateDebut && aujourdhui <= t.DateFin)
+                .OrderByDescending(t => t.Id)
+                .FirstOrDefaultAsync();
+            vm.TauxChangeApplique = tauxActif?.Taux ?? 3.4000m;
 
             vm.LignesArticles = new List<LigneSaisieVenteFRS>();
 
@@ -280,13 +287,18 @@ namespace ApplicationDeVente.Controllers
 
             var lignesFiltrees = vm.LignesArticles.Where(l => l.QuantiteVendueFRS > 0).ToList();
             decimal totalEur = lignesFiltrees.Sum(l => l.QuantiteVendueFRS * l.PrixUnitaireFRS);
+            decimal totalTnd = totalEur * vm.TauxChangeApplique;
 
             var etatVentesFRS = new EtatDesVentesFRS
             {
                 NumeroEtat = vm.NumeroEtat,
                 DateReception = vm.DateReception,
                 EtatDesVentesId = vm.EtatDesVentesId,
-                MontantFRS = totalEur,
+                MontantFRS = 0, // Optionnel, mais on utilise le nouveau format TND
+                TauxChangeApplique = vm.TauxChangeApplique,
+                ChiffreAffairesEUR = totalEur,
+                MontantTheoriqueTND = totalTnd,
+                MontantDeclareReelTND = vm.MontantDeclareReelTND,
                 StatutControle = "En attente"
             };
 

@@ -71,15 +71,17 @@
                                         <form method="post" asp-action="ChangerStatutFacture" class="d-inline">
                                             <input type="hidden" name="id" value="@f.Id" />
                                             <input type="hidden" name="statut" value="Validée" />
-                                            <button type="submit" class="btn btn-sm btn-success" title="Approuver (Bon à payer)">
-                                                <i class="fas fa-check"></i>
+                                            <button type="submit" class="btn btn-sm btn-success fw-semibold"
+                                                    onclick="return confirm('Valider cette facture comme Bon à Payer ?')">
+                                                ✅ Valider
                                             </button>
                                         </form>
                                         <form method="post" asp-action="ChangerStatutFacture" class="d-inline ms-1">
                                             <input type="hidden" name="id" value="@f.Id" />
                                             <input type="hidden" name="statut" value="Rejetée" />
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Rejeter">
-                                                <i class="fas fa-times"></i>
+                                            <button type="submit" class="btn btn-sm btn-danger fw-semibold"
+                                                    onclick="return confirm('Êtes-vous sûr de vouloir rejeter cette facture ?')">
+                                                ❌ Rejeter
                                             </button>
                                         </form>
                                     </td>

@@ -24,11 +24,25 @@ namespace ApplicationDeVente.Controllers
             var debutMois = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
             var finMois = debutMois.AddMonths(1).AddDays(-1);
 
-            ViewBag.EtatsAValider = await _db.EtatsDesVentes.CountAsync(e => e.Statut == "Saisi");
-            ViewBag.TrousDeCaisse = await _db.EtatsDesVentes.CountAsync(e => e.MontantEncaisseTND < e.ChiffreAffairesEUR * e.TauxChangeApplique);
-            ViewBag.CATotalMois = await _db.EtatsDesVentes
+            ViewBag.EtatsAValider = await _db.EtatsDesVentes.CountAsync(e => e.Statut == "Saisi" || e.Statut == "En attente");
+            ViewBag.TrousDeCaisse = await _db.EtatsDesVentes.CountAsync(e => e.MontantEncaisseReel < (e.ChiffreAffairesEUR * e.TauxChangeApplique));
+            
+            var caTotal = await _db.EtatsDesVentes
                 .Where(e => e.DateVol >= debutMois && e.DateVol <= finMois)
                 .SumAsync(e => (decimal?)e.ChiffreAffairesEUR) ?? 0;
+            ViewBag.CATotalMois = caTotal;
+
+            // Calcul dynamique de la Redevance
+            var etatsMois = await _db.EtatsDesVentes
+                .Include(e => e.VolsList)
+                .Where(e => e.DateVol >= debutMois && e.DateVol <= finMois)
+                .ToListAsync();
+
+            var nombreVols = etatsMois.SelectMany(e => e.VolsList).Select(v => v.VolId).Distinct().Count();
+            var totalPassagersEstimes = nombreVols > 0 ? nombreVols * 150 : 0;
+            var redevanceMethode1 = totalPassagersEstimes * 1.10m;
+            var redevanceMethode2 = caTotal * 0.42m;
+            ViewBag.RedevanceCalculee = Math.Max(redevanceMethode1, redevanceMethode2);
 
             return View();
         }
