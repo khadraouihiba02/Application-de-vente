@@ -386,6 +386,25 @@ namespace ApplicationDeVente.Controllers
             return RedirectToAction(nameof(Redevance), new { mois = redevance.Mois, annee = redevance.Annee });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GenererDemandeFacturation(int mois, int annee)
+        {
+            var redevance = await _db.Redevances
+                .FirstOrDefaultAsync(r => r.Mois == mois && r.Annee == annee);
+
+            if (redevance == null)
+            {
+                TempData["Erreur"] = "Redevance introuvable pour ce mois.";
+                return RedirectToAction(nameof(Redevance), new { mois, annee });
+            }
+
+            // Marquer comme facturée si besoin, ou simplement générer le doc
+            redevance.StatutFacturation = "Demande émise";
+            await _db.SaveChangesAsync();
+
+            return View("DemandeFacturation", redevance);
+        }
+
         // ── Valider Factures ─────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> ValiderFactures()

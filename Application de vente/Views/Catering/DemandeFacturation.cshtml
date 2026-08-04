@@ -1,0 +1,202 @@
+@model ApplicationDeVente.Models.RedevanceMensuelle
+@{
+    Layout = null; // Pas de layout, pour une impression pleine page propre
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <title>Demande de Facturation - DCF</title>
+    <!-- On utilise Bootstrap pour un rendu propre -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #525659;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .page {
+            background: white;
+            width: 21cm; /* Format A4 */
+            min-height: 29.7cm;
+            padding: 2cm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .header {
+            border-bottom: 2px solid #e3000f;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo-text {
+            color: #e3000f;
+            font-weight: bold;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        .titre-doc {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            text-decoration: underline;
+        }
+        .info-bloc {
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+        .table-montant {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: collapse;
+        }
+        .table-montant th, .table-montant td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+        .table-montant th {
+            background-color: #f8f9fa;
+        }
+        .total-row {
+            background-color: #e3000f;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .signatures {
+            margin-top: 80px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .sign-box {
+            border: 1px solid #ccc;
+            width: 250px;
+            height: 120px;
+            padding: 10px;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        /* Cacher le bouton d'impression lors de l'impression */
+        @@media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Boutons d'action hors du document imprimable -->
+    <div class="position-fixed top-0 end-0 p-3 no-print">
+        <button class="btn btn-primary shadow mb-2 w-100" onclick="window.print()">
+            🖨️ Sauvegarder en PDF
+        </button>
+        <a href="@Url.Action("Redevance", "Catering", new { mois = Model.Mois, annee = Model.Annee })" class="btn btn-secondary shadow w-100">
+            Retour
+        </a>
+    </div>
+
+    <div class="page">
+        <!-- En-tête officiel -->
+        <div class="header">
+            <div class="logo-text">✈️ TUNISAIR</div>
+            <div class="text-end">
+                <strong>Direction du Catering</strong><br />
+                Service Ventes à Bord<br />
+                Tunis, le @DateTime.Now.ToString("dd/MM/yyyy")
+            </div>
+        </div>
+
+        <div class="info-bloc">
+            <strong>À l'attention de :</strong><br />
+            Direction Centrale Financière (D.C.F)<br />
+            Service Comptabilité Tiers
+        </div>
+
+        <div class="titre-doc">
+            DEMANDE DE FACTURATION - REDEVANCE V.A.B<br />
+            <small class="text-muted" style="font-size: 16px;">Mois de @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Mois) @Model.Annee</small>
+        </div>
+
+        <p class="mb-4" style="line-height: 1.6; text-align: justify;">
+            Conformément aux modalités définies dans le contrat de concession liant TUNISAIR à la Société S.H.C.I pour l'exploitation des Ventes et Offres à Bord, nous vous prions de bien vouloir établir une facture au titre de la redevance pour le mois de <strong>@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Mois) @Model.Annee</strong>, selon les détails ci-après :
+        </p>
+
+        <!-- Tableau des données -->
+        <table class="table-montant">
+            <tr>
+                <th style="width: 60%">Données du mois</th>
+                <th style="width: 40%">Valeur</th>
+            </tr>
+            <tr>
+                <td>Nombre de passagers transportés</td>
+                <td>@Model.NombrePassagers passagers</td>
+            </tr>
+            <tr>
+                <td>Chiffre d'affaires global réalisé</td>
+                <td>@Model.ChiffreAffairesTotal.ToString("F2") €</td>
+            </tr>
+            <tr>
+                <td><em>Méthode 1 : Minimum Garanti (1.10 € / passager)</em></td>
+                <td>@Model.MontantMinGaranti.ToString("F2") €</td>
+            </tr>
+            <tr>
+                <td><em>Méthode 2 : Pourcentage (42% du CA)</em></td>
+                <td>@Model.MontantPourcentage.ToString("F2") €</td>
+            </tr>
+            <tr class="total-row">
+                <td style="color: white">REDEVANCE À FACTURER (Méthode retenue)</td>
+                <td style="color: white">@Model.MontantRetenu.ToString("F2") €</td>
+            </tr>
+        </table>
+        
+        <p class="mt-3 text-muted" style="font-size: 13px;">
+            <em>* L'application a retenu automatiquement la variante la plus favorable pour TUNISAIR : @Model.MethodeAppliquee.</em>
+        </p>
+
+        <!-- Zone de signatures -->
+        <div class="signatures">
+            <div class="sign-box">
+                <strong>Responsable Suivi V.A.B</strong><br /><br />
+                <em>(Cachet et Signature)</em>
+            </div>
+            <div class="sign-box">
+                <strong>Le Directeur du Catering</strong><br /><br />
+                <em>(Bon à émettre & Cachet)</em>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; font-size: 12px; text-align: center; color: #999;">
+            Document généré automatiquement par le Système d'Information VAB TUNISAIR - N° Réf : VAB-@Model.Annee-@Model.Mois.ToString("D2")
+        </div>
+    </div>
+
+    <!-- Déclenchement automatique de l'impression -->
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        }
+    </script>
+</body>
+</html>

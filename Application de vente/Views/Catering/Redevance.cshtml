@@ -112,9 +112,6 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 d-print-none">
-                    <button class="btn btn-secondary" onclick="window.print()">
-                        <i class="fas fa-print me-1"></i> Imprimer
-                    </button>
                     @if (Model.Id == 0)
                     {
                         <form method="post" asp-action="SauvegarderRedevance">
@@ -134,9 +131,9 @@
                     }
                     else
                     {
-                        <button class="btn btn-primary" type="button">
+                        <a href="@Url.Action("GenererDemandeFacturation", "Catering", new { mois = Model.Mois, annee = Model.Annee })" class="btn btn-primary" target="_blank">
                             <i class="fas fa-envelope me-1"></i> Établir Demande de Facturation DCF
-                        </button>
+                        </a>
                     }
                 </div>
             </div>
