@@ -70,6 +70,30 @@
         </div>
     </div>
 
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-bold text-white bg-dark d-flex justify-content-between align-items-center">
+            <div>
+                <span class="fs-6">🎁 Offres déclarées par le fournisseur (Optionnel)</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-warning fw-bold" id="btnAddLigneOffreFRS">+ Ajouter une offre FRS</button>
+        </div>
+        <div class="table-responsive" id="divOffresFRS">
+            <table class="table table-hover align-middle mb-0" id="offresFRSTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40%;">Article (Code ou Désignation)</th>
+                        <th class="text-center" style="width: 20%;">Dotation Initiale FRS</th>
+                        <th class="text-center" style="width: 20%;">Qté Restante FRS</th>
+                        <th class="text-center" style="width: 15%;">Qté Consommée FRS</th>
+                        <th class="text-center" style="width: 5%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyOffresFRS">
+                </tbody>
+            </table>
+        </div>
+    </div>
     <!-- Panneau de résumé des totaux et Encaissement FRS -->
     <div class="row justify-content-end mb-4">
         <div class="col-md-5">
@@ -281,6 +305,87 @@
             $(document).on("click", ".btn-remove", function () {
                 $(this).closest("tr").remove();
                 recalculerTotaux();
+            });
+
+
+            // --- LOGIQUE OFFRES FRS ---
+
+
+            let indexLigneOffreFRS = 0;
+            function recalculerConsommationFRS() {
+                $("#tbodyOffresFRS tr").each(function () {
+                    const dot = parseInt($(this).find(".val-dot-frs").val()) || 0;
+                    const rest = parseInt($(this).find(".val-rest-frs").val()) || 0;
+                    let cons = dot - rest;
+                    if(cons < 0) cons = 0;
+                    $(this).find(".display-cons-frs").text(cons);
+                });
+            }
+
+            $("#btnAddLigneOffreFRS").click(function () {
+                const tr = `
+                    <tr>
+                        <td>
+                            <input type="hidden" name="LignesOffres[${indexLigneOffreFRS}].CodeArticle" class="val-code-o" value="" />
+                            <input type="hidden" name="LignesOffres[${indexLigneOffreFRS}].Designation" class="val-desig-o" value="" />
+                            <div class="position-relative">
+                                <input type="text" class="form-control article-search-input-o" placeholder="Taper code ou nom..." autocomplete="off" />
+                                <div class="list-group position-absolute w-100 article-suggestions-o shadow-sm" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto;"></div>
+                            </div>
+                        </td>
+                        <td class="text-center"><input type="number" min="0" name="LignesOffres[${indexLigneOffreFRS}].DotationInitialeFRS" class="form-control form-control-sm text-center val-dot-frs" value="0" style="max-width: 100px; margin: 0 auto;" /></td>
+                        <td class="text-center"><input type="number" min="0" name="LignesOffres[${indexLigneOffreFRS}].QuantiteRestanteFRS" class="form-control form-control-sm text-center val-rest-frs" value="0" style="max-width: 100px; margin: 0 auto;" /></td>
+                        <td class="text-center fw-bold display-cons-frs text-primary">0</td>
+                        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-o" title="Supprimer">🗑️</button></td>
+                    </tr>
+                `;
+                $("#tbodyOffresFRS").append(tr);
+                const row = $("#tbodyOffresFRS tr").last();
+                
+                const inputRecherche = row.find(".article-search-input-o");
+                const suggestions = row.find(".article-suggestions-o");
+
+                inputRecherche.on("input", function() {
+                    const query = $(this).val();
+                    if (query.length >= 2) {
+                        $.ajax({
+                            url: '/Agent/RechercherArticle',
+                            dataType: 'json',
+                            data: { query: query },
+                            success: function(data) {
+                                suggestions.empty();
+                                if (data.length > 0) {
+                                    data.forEach(function(item) {
+                                        suggestions.append(`
+                                            <a href="#" class="list-group-item list-group-item-action py-2 suggestion-item-o" 
+                                               data-code="${item.code}" data-desig="${item.designation}">
+                                               <strong>${item.code}</strong> - ${item.designation}
+                                            </a>`);
+                                    });
+                                    suggestions.show();
+                                }
+                            }
+                        });
+                    } else suggestions.hide();
+                });
+
+                suggestions.on("click", ".suggestion-item-o", function(e) {
+                    e.preventDefault();
+                    const d = $(this).data();
+                    row.find(".val-code-o").val(d.code);
+                    row.find(".val-desig-o").val(d.desig);
+                    inputRecherche.val(d.code + " - " + d.desig);
+                    suggestions.hide();
+                });
+
+                row.find(".val-dot-frs").on("input", recalculerConsommationFRS);
+                row.find(".val-rest-frs").on("input", recalculerConsommationFRS);
+                
+                indexLigneOffreFRS++;
+            });
+
+            $(document).on("click", ".btn-remove-o", function () {
+                $(this).closest("tr").remove();
             });
 
             // Validation finale

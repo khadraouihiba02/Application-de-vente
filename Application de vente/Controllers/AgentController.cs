@@ -160,79 +160,46 @@ namespace ApplicationDeVente.Controllers
             }
 
             _db.EtatsDesVentes.Add(etatVentes);
-            await _db.SaveChangesAsync();
 
-            TempData["Succes"] = $"L'état des ventes pour la FL {vm.NumeroFeuilleLigne} a été enregistré avec succès (Total : {totalEur:F2} €).";
-            return RedirectToAction(nameof(Dashboard));
-        }
-
-        // ── Saisie des Offres à bord ─────────────────────────────────
-        [HttpGet]
-        public async Task<IActionResult> SaisirOffres()
-        {
-            var vm = new SaisieOffresViewModel();
-            var aujourdhui = DateTime.Today;
-
-            vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif)
-                .Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.FN_NUMBER} ({v.DEP_AP_ACTUAL} - {v.ARR_AP_ACTUAL}) - {v.DAY_OF_ORIGIN:dd/MM/yyyy}" })
-                .ToListAsync();
-
-            var tauxActif = await _db.TauxChanges
-                .Where(t => t.DeviseCible == "TND" && aujourdhui >= t.DateDebut && aujourdhui <= t.DateFin)
-                .OrderByDescending(t => t.Id)
-                .FirstOrDefaultAsync();
-            vm.TauxChangeApplique = tauxActif?.Taux ?? 3.4000m;
-
-            vm.LignesArticles = new List<LigneSaisieOffre>();
-
-            return View(vm);
-        }
-
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaisirOffres(SaisieOffresViewModel vm)
-        {
-            if (!ModelState.IsValid || vm.VolId == 0)
+            // Gérer les offres si des lignes ont été saisies
+            if (vm.LignesOffres != null && vm.LignesOffres.Any(l => l.ArticleId > 0))
             {
-                vm.VolsDisponibles = await _db.Vols.Where(v => v.Actif).Select(v => new SelectListItem { Value = v.Id.ToString(), Text = $"{v.FN_NUMBER} ({v.DEP_AP_ACTUAL} - {v.ARR_AP_ACTUAL}) - {v.DAY_OF_ORIGIN:dd/MM/yyyy}" }).ToListAsync();
-                if(vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieOffre>();
-                return View(vm);
-            }
+                var lignesOffresFiltrees = vm.LignesOffres.Where(l => l.ArticleId > 0).ToList();
+                decimal totalOffresEur = lignesOffresFiltrees.Sum(l => l.QuantiteOfferte * l.PrixUnitairePromoEUR);
 
-            // On ne garde que les lignes valides saisies par l'agent
-            var lignesFiltrees = vm.LignesArticles.Where(l => l.ArticleId > 0).ToList();
-
-            decimal totalEur = lignesFiltrees.Sum(l => l.QuantiteOfferte * l.PrixUnitairePromoEUR);
-
-            var etatOffres = new EtatDesOffres
-            {
-                NumeroFeuilleLigne = vm.NumeroFeuilleLigne,
-                DateVol = vm.DateVol,
-                TauxChangeApplique = vm.TauxChangeApplique,
-                ChiffreAffairesEUR = totalEur,
-                MontantEncaisseTND = totalEur * vm.TauxChangeApplique,
-                Statut = "Saisi"
-            };
-
-            etatOffres.VolsList.Add(new EtatDesOffresVol { VolId = vm.VolId });
-
-            foreach (var ligne in lignesFiltrees)
-            {
-                etatOffres.Lignes.Add(new LigneOffre
+                var etatOffres = new EtatDesOffres
                 {
-                    ArticleId = ligne.ArticleId,
-                    QuantiteDotation = ligne.QuantiteDotation,
-                    QuantiteCompl = ligne.QuantiteCompl,
-                    QuantiteOfferte = ligne.QuantiteOfferte,
-                    PrixUnitairePromoEUR = ligne.PrixUnitairePromoEUR
-                });
+                    NumeroFeuilleLigne = vm.NumeroFeuilleLigne,
+                    DateVol = vm.DateVol,
+                    TauxChangeApplique = vm.TauxChangeApplique,
+                    ChiffreAffairesEUR = totalOffresEur,
+                    MontantEncaisseTND = totalOffresEur * vm.TauxChangeApplique,
+                    Statut = "Saisi"
+                };
+
+                etatOffres.VolsList.Add(new EtatDesOffresVol { VolId = vm.VolId });
+
+                foreach (var ligne in lignesOffresFiltrees)
+                {
+                    etatOffres.Lignes.Add(new LigneOffre
+                    {
+                        ArticleId = ligne.ArticleId,
+                        QuantiteDotation = ligne.QuantiteDotation,
+                        QuantiteCompl = ligne.QuantiteCompl,
+                        QuantiteOfferte = ligne.QuantiteOfferte,
+                        PrixUnitairePromoEUR = ligne.PrixUnitairePromoEUR
+                    });
+                }
+                _db.EtatsDesOffres.Add(etatOffres);
             }
 
-            _db.EtatsDesOffres.Add(etatOffres);
             await _db.SaveChangesAsync();
 
-            TempData["Succes"] = $"L'état des offres pour la FL {vm.NumeroFeuilleLigne} a été enregistré avec succès.";
+            TempData["Succes"] = $"L'état des ventes (et offres si saisies) pour la FL {vm.NumeroFeuilleLigne} a été enregistré avec succès.";
             return RedirectToAction(nameof(Dashboard));
         }
+
+
 
         // ── Saisie des Ventes FRS ─────────────────────────────────────
         [HttpGet]
@@ -315,87 +282,50 @@ namespace ApplicationDeVente.Controllers
             }
 
             _db.EtatsDesVentesFRS.Add(etatVentesFRS);
-            await _db.SaveChangesAsync();
 
-            TempData["Succes"] = $"L'état des ventes FRS N° {vm.NumeroEtat} a été enregistré avec succès (Total : {totalEur:F2} €).";
-            return RedirectToAction(nameof(Dashboard));
-        }
-
-        // ── Saisie des Offres FRS ─────────────────────────────────────
-        [HttpGet]
-        public async Task<IActionResult> SaisirOffresFRS()
-        {
-            var vm = new SaisieOffresFRSViewModel();
-
-            var dejaSaisis = await _db.EtatsDesOffresFRS.Select(f => f.EtatDesOffresId).ToListAsync();
-
-            vm.EtatsPNCDisponibles = await _db.EtatsDesOffres
-                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
-                .Where(e => !dejaSaisis.Contains(e.Id))
-                .Select(e => new SelectListItem
-                {
-                    Value = e.Id.ToString(),
-                    Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
-                })
-                .ToListAsync();
-
-            vm.LignesArticles = new List<LigneSaisieOffreFRS>();
-
-            return View(vm);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaisirOffresFRS(SaisieOffresFRSViewModel vm)
-        {
-            if (!ModelState.IsValid || vm.EtatDesOffresId == 0)
+            // Gérer les offres FRS si des lignes ont été saisies
+            if (vm.LignesOffres != null && vm.LignesOffres.Any(l => l.DotationInitialeFRS > 0 || l.QuantiteRestanteFRS > 0))
             {
-                var dejaSaisis = await _db.EtatsDesOffresFRS.Select(f => f.EtatDesOffresId).ToListAsync();
-                vm.EtatsPNCDisponibles = await _db.EtatsDesOffres
-                    .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
-                    .Where(e => !dejaSaisis.Contains(e.Id))
-                    .Select(e => new SelectListItem
+                // Trouver l'ID de l'état des offres PNC associé s'il existe
+                var etatVentesPNC = await _db.EtatsDesVentes.FindAsync(vm.EtatDesVentesId);
+                var etatOffresPNC = await _db.EtatsDesOffres.FirstOrDefaultAsync(o => o.NumeroFeuilleLigne == etatVentesPNC.NumeroFeuilleLigne && o.DateVol == etatVentesPNC.DateVol);
+
+                if (etatOffresPNC != null)
+                {
+                    var lignesOffresFiltrees = vm.LignesOffres.Where(l => l.DotationInitialeFRS > 0 || l.QuantiteRestanteFRS > 0).ToList();
+                    var etatOffresFRS = new EtatDesOffresFRS
                     {
-                        Value = e.Id.ToString(),
-                        Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
-                    })
-                    .ToListAsync();
+                        NumeroEtat = vm.NumeroEtat,
+                        DateReception = vm.DateReception,
+                        EtatDesOffresId = etatOffresPNC.Id,
+                        StatutControle = "En attente"
+                    };
 
-                if (vm.LignesArticles == null) vm.LignesArticles = new List<LigneSaisieOffreFRS>();
-                return View(vm);
+                    foreach (var ligne in lignesOffresFiltrees)
+                    {
+                        int qteConsommee = ligne.DotationInitialeFRS - ligne.QuantiteRestanteFRS;
+                        if (qteConsommee < 0) qteConsommee = 0;
+
+                        etatOffresFRS.Lignes.Add(new LigneOffreFRS
+                        {
+                            CodeArticle = ligne.CodeArticle,
+                            NomArticle = ligne.Designation,
+                            DotationInitialeFRS = ligne.DotationInitialeFRS,
+                            QuantiteRestanteFRS = ligne.QuantiteRestanteFRS,
+                            QuantiteConsommeeFRS = qteConsommee
+                        });
+                    }
+                    _db.EtatsDesOffresFRS.Add(etatOffresFRS);
+                }
             }
 
-            var lignesFiltrees = vm.LignesArticles.Where(l => l.DotationInitialeFRS > 0 || l.QuantiteRestanteFRS > 0).ToList();
-
-            var etatOffresFRS = new EtatDesOffresFRS
-            {
-                NumeroEtat = vm.NumeroEtat,
-                DateReception = vm.DateReception,
-                EtatDesOffresId = vm.EtatDesOffresId,
-                StatutControle = "En attente"
-            };
-
-            foreach (var ligne in lignesFiltrees)
-            {
-                int qteConsommee = ligne.DotationInitialeFRS - ligne.QuantiteRestanteFRS;
-                if (qteConsommee < 0) qteConsommee = 0;
-
-                etatOffresFRS.Lignes.Add(new LigneOffreFRS
-                {
-                    CodeArticle = ligne.CodeArticle,
-                    NomArticle = ligne.Designation,
-                    DotationInitialeFRS = ligne.DotationInitialeFRS,
-                    QuantiteRestanteFRS = ligne.QuantiteRestanteFRS,
-                    QuantiteConsommeeFRS = qteConsommee
-                });
-            }
-
-            _db.EtatsDesOffresFRS.Add(etatOffresFRS);
             await _db.SaveChangesAsync();
 
-            TempData["Succes"] = $"L'état des offres FRS N° {vm.NumeroEtat} a été enregistré avec succès.";
+            TempData["Succes"] = $"L'état des ventes FRS N° {vm.NumeroEtat} a été enregistré avec succès.";
             return RedirectToAction(nameof(Dashboard));
         }
+
+
 
         // ── Endpoints API pour l'interface dynamique ─────────────────
 
@@ -461,6 +391,231 @@ namespace ApplicationDeVente.Controllers
                 .ToListAsync();
 
             return Json(articles);
+        }
+
+        // ── Endpoints pour Détails et Exportation Dashboard ──────────
+
+        [HttpGet]
+        public async Task<IActionResult> GetDetailsVente(int id)
+        {
+            var etat = await _db.EtatsDesVentes
+                .Include(e => e.PNCVendeur)
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                .Include(e => e.Lignes).ThenInclude(l => l.Article)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (etat == null) return NotFound();
+
+            var result = new
+            {
+                fl = etat.NumeroFeuilleLigne,
+                date = etat.DateVol.ToString("dd/MM/yyyy"),
+                vol = string.Join(" / ", etat.VolsList.Select(v => v.Vol?.FN_NUMBER)),
+                pnc = etat.PNCVendeur != null ? $"{etat.PNCVendeur.name} {etat.PNCVendeur.First_name}" : "-",
+                totalEur = etat.ChiffreAffairesEUR,
+                totalTnd = etat.MontantEncaisseTND,
+                statut = etat.Statut,
+                lignes = etat.Lignes.Select(l => new
+                {
+                    code = l.Article?.CodeArticle ?? "N/A",
+                    designation = l.Article?.NomArticle ?? "Inconnu",
+                    dotation = l.QuantiteDotation,
+                    complement = l.QuantiteCompl,
+                    vendue = l.QuantiteVendue,
+                    prixUnit = l.PrixUnitaireEUR,
+                    total = l.QuantiteVendue * l.PrixUnitaireEUR
+                })
+            };
+
+            return Json(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDetailsOffre(int id)
+        {
+            var etat = await _db.EtatsDesOffres
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                .Include(e => e.Lignes).ThenInclude(l => l.Article)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (etat == null) return NotFound();
+
+            var result = new
+            {
+                fl = etat.NumeroFeuilleLigne,
+                date = etat.DateVol.ToString("dd/MM/yyyy"),
+                vol = string.Join(" / ", etat.VolsList.Select(v => v.Vol?.FN_NUMBER)),
+                valeurEur = etat.ChiffreAffairesEUR,
+                statut = etat.Statut,
+                lignes = etat.Lignes.Select(l => new
+                {
+                    code = l.Article?.CodeArticle ?? "N/A",
+                    designation = l.Article?.NomArticle ?? "Inconnu",
+                    dotation = l.QuantiteDotation,
+                    complement = l.QuantiteCompl,
+                    offerte = l.QuantiteOfferte,
+                    prixPromo = l.PrixUnitairePromoEUR,
+                    total = l.QuantiteOfferte * l.PrixUnitairePromoEUR
+                })
+            };
+
+            return Json(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDetailsVenteFRS(int id)
+        {
+            var etat = await _db.EtatsDesVentesFRS
+                .Include(e => e.EtatDesVentes)
+                .Include(e => e.Lignes)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (etat == null) return NotFound();
+
+            var result = new
+            {
+                numeroEtat = etat.NumeroEtat,
+                dateReception = etat.DateReception.ToString("dd/MM/yyyy"),
+                flPnc = etat.EtatDesVentes?.NumeroFeuilleLigne ?? "N/A",
+                totalEur = etat.ChiffreAffairesEUR,
+                statut = etat.StatutControle,
+                lignes = etat.Lignes.Select(l => new
+                {
+                    code = l.CodeArticle,
+                    designation = l.NomArticle,
+                    vendue = l.QuantiteVendueFRS,
+                    prixUnit = l.PrixUnitaireFRS,
+                    valeur = l.ValeurFRS
+                })
+            };
+
+            return Json(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDetailsOffreFRS(int id)
+        {
+            var etat = await _db.EtatsDesOffresFRS
+                .Include(e => e.EtatDesOffres)
+                .Include(e => e.Lignes)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (etat == null) return NotFound();
+
+            var result = new
+            {
+                numeroEtat = etat.NumeroEtat,
+                dateReception = etat.DateReception.ToString("dd/MM/yyyy"),
+                flPnc = etat.EtatDesOffres?.NumeroFeuilleLigne ?? "N/A",
+                statut = etat.StatutControle,
+                lignes = etat.Lignes.Select(l => new
+                {
+                    code = l.CodeArticle,
+                    designation = l.NomArticle,
+                    dotation = l.DotationInitialeFRS,
+                    restante = l.QuantiteRestanteFRS,
+                    consommee = l.QuantiteConsommeeFRS
+                })
+            };
+
+            return Json(result);
+        }
+
+        // Exportations CSV
+        [HttpGet]
+        public async Task<IActionResult> ExporterVenteCSV(int id)
+        {
+            var etat = await _db.EtatsDesVentes
+                .Include(e => e.PNCVendeur)
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                .Include(e => e.Lignes).ThenInclude(l => l.Article)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (etat == null) return NotFound();
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"État des Ventes;FL: {etat.NumeroFeuilleLigne};Date: {etat.DateVol:dd/MM/yyyy};PNC: {(etat.PNCVendeur != null ? $"{etat.PNCVendeur.name} {etat.PNCVendeur.First_name}" : "-")}");
+            sb.AppendLine("Code Article;Désignation;Dotation;Complément;Qté Vendue;Prix Unit (EUR);Total (EUR)");
+
+            foreach (var l in etat.Lignes)
+            {
+                sb.AppendLine($"{l.Article?.CodeArticle};{l.Article?.NomArticle};{l.QuantiteDotation};{l.QuantiteCompl};{l.QuantiteVendue};{l.PrixUnitaireEUR:F2};{(l.QuantiteVendue * l.PrixUnitaireEUR):F2}");
+            }
+            sb.AppendLine($";;;;;TOTAL (EUR):;{etat.ChiffreAffairesEUR:F2}");
+
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv", $"Ventes_FL_{etat.NumeroFeuilleLigne}.csv");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExporterOffreCSV(int id)
+        {
+            var etat = await _db.EtatsDesOffres
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                .Include(e => e.Lignes).ThenInclude(l => l.Article)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (etat == null) return NotFound();
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"État des Offres;FL: {etat.NumeroFeuilleLigne};Date: {etat.DateVol:dd/MM/yyyy}");
+            sb.AppendLine("Code Article;Désignation;Dotation;Complément;Qté Offerte;Prix Promo (EUR);Total Promo (EUR)");
+
+            foreach (var l in etat.Lignes)
+            {
+                sb.AppendLine($"{l.Article?.CodeArticle};{l.Article?.NomArticle};{l.QuantiteDotation};{l.QuantiteCompl};{l.QuantiteOfferte};{l.PrixUnitairePromoEUR:F2};{(l.QuantiteOfferte * l.PrixUnitairePromoEUR):F2}");
+            }
+            sb.AppendLine($";;;;;VALEUR TOTALE (EUR):;{etat.ChiffreAffairesEUR:F2}");
+
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv", $"Offres_FL_{etat.NumeroFeuilleLigne}.csv");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExporterVenteFRSCSSV(int id)
+        {
+            var etat = await _db.EtatsDesVentesFRS
+                .Include(e => e.EtatDesVentes)
+                .Include(e => e.Lignes)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (etat == null) return NotFound();
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"État Ventes FRS;N° État: {etat.NumeroEtat};Date Réception: {etat.DateReception:dd/MM/yyyy};FL PNC: {etat.EtatDesVentes?.NumeroFeuilleLigne}");
+            sb.AppendLine("Code Article;Désignation;Qté Vendue FRS;Prix Unit FRS (EUR);Valeur FRS (EUR)");
+
+            foreach (var l in etat.Lignes)
+            {
+                sb.AppendLine($"{l.CodeArticle};{l.NomArticle};{l.QuantiteVendueFRS};{l.PrixUnitaireFRS:F2};{l.ValeurFRS:F2}");
+            }
+            sb.AppendLine($";;;TOTAL FRS (EUR):;{etat.ChiffreAffairesEUR:F2}");
+
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv", $"Ventes_FRS_{etat.NumeroEtat}.csv");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExporterOffreFRSCSSV(int id)
+        {
+            var etat = await _db.EtatsDesOffresFRS
+                .Include(e => e.EtatDesOffres)
+                .Include(e => e.Lignes)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (etat == null) return NotFound();
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"État Offres FRS;N° État: {etat.NumeroEtat};Date Réception: {etat.DateReception:dd/MM/yyyy};FL PNC: {etat.EtatDesOffres?.NumeroFeuilleLigne}");
+            sb.AppendLine("Code Article;Désignation;Dotation FRS;Qté Restante FRS;Qté Consommée FRS");
+
+            foreach (var l in etat.Lignes)
+            {
+                sb.AppendLine($"{l.CodeArticle};{l.NomArticle};{l.DotationInitialeFRS};{l.QuantiteRestanteFRS};{l.QuantiteConsommeeFRS}");
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv", $"Offres_FRS_{etat.NumeroEtat}.csv");
         }
     }
 }

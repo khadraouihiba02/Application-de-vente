@@ -87,6 +87,37 @@
         </div>
     </div>
 
+
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-bold text-white bg-dark d-flex justify-content-between align-items-center">
+            <div>
+                <span class="fs-6">🎁 Offres gratuites / promotions (Optionnel)</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-warning fw-bold" id="btnAddLigneOffre">+ Ajouter une offre</button>
+        </div>
+        <div class="table-responsive" id="divOffres">
+            <table class="table table-hover align-middle mb-0" id="offresTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 25%;">Article (Code ou Désignation)</th>
+                        <th class="text-center" style="width: 15%;">Prix Unit. Normal (€)</th>
+                        <th class="text-center" style="width: 10%;">Dotation</th>
+                        <th class="text-center" style="width: 10%;">Complément</th>
+                        <th class="text-center" style="width: 10%;">Qté Offerte</th>
+                        <th class="text-center" style="width: 15%;">Prix Promo (€)</th>
+                        <th class="text-end" style="width: 10%;">Total (€)</th>
+                        <th class="text-center" style="width: 5%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyOffres">
+                </tbody>
+            </table>
+            <div id="emptyMessageOffres" class="text-center text-muted p-4">
+                <em>Aucune offre saisie. Cliquez sur "+ Ajouter une offre".</em>
+            </div>
+        </div>
+    </div>
     <!-- Panneau de résumé des totaux et Encaissement -->
     <div class="row justify-content-end mb-4">
         <div class="col-md-5">
@@ -361,6 +392,107 @@
             $(document).on("click", ".btn-remove", function () {
                 $(this).closest("tr").remove();
                 recalculerTotaux();
+            });
+
+
+            // --- LOGIQUE OFFRES ---
+
+
+            let indexLigneOffre = 0;
+            function recalculerTotauxOffres() {
+                let totalEurOffres = 0;
+                $("#tbodyOffres tr").each(function () {
+                    const qte = parseInt($(this).find(".val-offerte").val()) || 0;
+                    const prix = parseFloat($(this).find(".val-prix-promo").val()) || 0.0;
+                    const totalLigne = qte * prix;
+                    $(this).find(".val-total-ligne-offre").text(totalLigne.toFixed(2) + " €");
+                    totalEurOffres += totalLigne;
+                });
+                
+                if ($("#tbodyOffres tr").length > 0) {
+                    $("#emptyMessageOffres").hide();
+                } else {
+                    $("#emptyMessageOffres").show();
+                }
+                // Vous pouvez ajouter un affichage du total offres si besoin
+            }
+
+            $("#btnAddLigneOffre").click(function () {
+                const tr = `
+                    <tr>
+                        <td>
+                            <input type="hidden" name="LignesOffres[${indexLigneOffre}].ArticleId" class="val-id-o" value="0" />
+                            <input type="hidden" name="LignesOffres[${indexLigneOffre}].CodeArticle" class="val-code-o" value="" />
+                            <input type="hidden" name="LignesOffres[${indexLigneOffre}].Designation" class="val-desig-o" value="" />
+                            <input type="hidden" name="LignesOffres[${indexLigneOffre}].PrixCatalogueEUR" class="val-prix-cat-o" value="0" />
+                            <div class="position-relative">
+                                <input type="text" class="form-control article-search-input-o" placeholder="Taper code ou nom..." autocomplete="off" />
+                                <div class="list-group position-absolute w-100 article-suggestions-o shadow-sm" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto;"></div>
+                            </div>
+                        </td>
+                        <td class="text-center fw-bold text-muted display-prix-cat-o"><del>0.00 €</del></td>
+                        <td class="text-center"><input type="number" min="0" name="LignesOffres[${indexLigneOffre}].QuantiteDotation" class="form-control form-control-sm text-center" value="0" style="max-width: 80px; margin: 0 auto;" /></td>
+                        <td class="text-center"><input type="number" min="0" name="LignesOffres[${indexLigneOffre}].QuantiteCompl" class="form-control form-control-sm text-center" value="0" style="max-width: 80px; margin: 0 auto;" /></td>
+                        <td class="text-center"><input type="number" min="0" name="LignesOffres[${indexLigneOffre}].QuantiteOfferte" class="form-control form-control-sm text-center fw-bold text-warning val-offerte" value="0" style="max-width: 80px; margin: 0 auto;" /></td>
+                        <td class="text-center"><input type="number" min="0" step="0.01" name="LignesOffres[${indexLigneOffre}].PrixUnitairePromoEUR" class="form-control form-control-sm text-center val-prix-promo" value="0" style="max-width: 100px; margin: 0 auto;" /></td>
+                        <td class="text-end fw-bold val-total-ligne-offre" style="color: #2c3e50;">0.00 €</td>
+                        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-o" title="Supprimer">🗑️</button></td>
+                    </tr>
+                `;
+                $("#tbodyOffres").append(tr);
+                const row = $("#tbodyOffres tr").last();
+                
+                // Code de recherche basique (même logique que ventes)
+                const inputRecherche = row.find(".article-search-input-o");
+                const suggestions = row.find(".article-suggestions-o");
+
+                inputRecherche.on("input", function() {
+                    const query = $(this).val();
+                    if (query.length >= 2) {
+                        $.ajax({
+                            url: '/Agent/RechercherArticle',
+                            dataType: 'json',
+                            data: { query: query },
+                            success: function(data) {
+                                suggestions.empty();
+                                if (data.length > 0) {
+                                    data.forEach(function(item) {
+                                        suggestions.append(`
+                                            <a href="#" class="list-group-item list-group-item-action py-2 suggestion-item-o" 
+                                               data-id="${item.id}" data-code="${item.code}" data-desig="${item.designation}" data-prix="${item.prix}">
+                                               <strong>${item.code}</strong> - ${item.designation}
+                                            </a>`);
+                                    });
+                                    suggestions.show();
+                                }
+                            }
+                        });
+                    } else suggestions.hide();
+                });
+
+                suggestions.on("click", ".suggestion-item-o", function(e) {
+                    e.preventDefault();
+                    const d = $(this).data();
+                    row.find(".val-id-o").val(d.id);
+                    row.find(".val-code-o").val(d.code);
+                    row.find(".val-desig-o").val(d.desig);
+                    row.find(".val-prix-cat-o").val(d.prix.toString().replace(',', '.'));
+                    row.find(".display-prix-cat-o").html('<del>' + parseFloat(d.prix).toFixed(2) + ' €</del>');
+                    inputRecherche.val(d.code + " - " + d.desig);
+                    suggestions.hide();
+                    recalculerTotauxOffres();
+                });
+
+                row.find(".val-offerte").on("input", recalculerTotauxOffres);
+                row.find(".val-prix-promo").on("input", recalculerTotauxOffres);
+                
+                indexLigneOffre++;
+                recalculerTotauxOffres();
+            });
+
+            $(document).on("click", ".btn-remove-o", function () {
+                $(this).closest("tr").remove();
+                recalculerTotauxOffres();
             });
 
             // Validation finale avant submit

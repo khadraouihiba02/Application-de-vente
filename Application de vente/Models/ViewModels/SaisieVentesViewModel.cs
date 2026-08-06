@@ -41,6 +41,10 @@ namespace ApplicationDeVente.Models.ViewModels
 
         // ── Grille de saisie des articles ──
         public List<LigneSaisieArticle> LignesArticles { get; set; } = new();
+
+        // ── Grille de saisie des offres ──
+        public bool InclureOffres { get; set; } = false;
+        public List<LigneSaisieOffre> LignesOffres { get; set; } = new();
     }
 
     public class LigneSaisieArticle
@@ -55,5 +59,24 @@ namespace ApplicationDeVente.Models.ViewModels
         public int QuantiteDotation { get; set; } = 0;
         public int QuantiteCompl { get; set; } = 0;
         public int QuantiteVendue { get; set; } = 0;
+    }
+
+    public class LigneSaisieOffre
+    {
+        public int ArticleId { get; set; }
+        public string CodeArticle { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
+
+        [Display(Name = "Dotation")]
+        public int QuantiteDotation { get; set; } = 0;
+
+        [Display(Name = "Complément")]
+        public int QuantiteCompl { get; set; } = 0;
+
+        [Display(Name = "Qté Offerte")]
+        public int QuantiteOfferte { get; set; } = 0;
+
+        [Display(Name = "Prix Promo EUR")]
+        public decimal PrixUnitairePromoEUR { get; set; } = 0;
     }
 }

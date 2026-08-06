@@ -30,6 +30,15 @@ namespace ApplicationDeVente.Models.ViewModels
 
         // Grille de saisie des articles FRS
         public List<LigneSaisieVenteFRS> LignesArticles { get; set; } = new();
+
+        // ── Grille de saisie des offres FRS ──
+        public bool InclureOffresFRS { get; set; } = false;
+        
+        [Display(Name = "Montant Déclaré Offres FRS (TND)")]
+        [DisplayFormat(DataFormatString = "{0:F3}")]
+        public decimal MontantDeclareOffresTND { get; set; } = 0;
+
+        public List<LigneSaisieOffreFRS> LignesOffres { get; set; } = new();
     }
 
     public class LigneSaisieVenteFRS
@@ -42,5 +51,20 @@ namespace ApplicationDeVente.Models.ViewModels
 
         [Display(Name = "Prix Unitaire FRS")]
         public decimal PrixUnitaireFRS { get; set; } = 0;
+    }
+
+    public class LigneSaisieOffreFRS
+    {
+        public string CodeArticle { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
+
+        [Display(Name = "Dotation Initiale FRS")]
+        public int DotationInitialeFRS { get; set; } = 0;
+
+        [Display(Name = "Quantité Restante FRS")]
+        public int QuantiteRestanteFRS { get; set; } = 0;
+
+        [Display(Name = "Quantité Consommée FRS")]
+        public int QuantiteConsommeeFRS { get; set; } = 0;
     }
 }

@@ -14,7 +14,7 @@
 
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #d9230f;">
+        <div class="card shadow-sm border-0 h-100 border-top border-4 border-danger">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">✈️</div>
                 <div class="fw-bold fs-3 mt-2">@Model.VolsSaisisCeMois</div>
@@ -23,28 +23,28 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #2196F3;">
+        <div class="card shadow-sm border-0 h-100 border-top border-4 border-info">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">📋</div>
-                <div class="fw-bold fs-3 mt-2">@Model.EtatsEnAttente</div>
+                <div class="fw-bold fs-3 mt-2 text-info">@Model.EtatsEnAttente</div>
                 <div class="text-muted small">États en attente</div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #4CAF50;">
+        <div class="card shadow-sm border-0 h-100 border-top border-4 border-success">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">✅</div>
-                <div class="fw-bold fs-3 mt-2">@Model.EtatsValides</div>
+                <div class="fw-bold fs-3 mt-2 text-success">@Model.EtatsValides</div>
                 <div class="text-muted small">États validés</div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 h-100" style="border-top: 4px solid #FFC107;">
+        <div class="card shadow-sm border-0 h-100 border-top border-4 border-warning">
             <div class="card-body text-center py-4">
                 <div style="font-size:2.5rem;">💰</div>
-                <div class="fw-bold fs-3 mt-2">@Model.CommissionEstimee.ToString("F3") TND</div>
+                <div class="fw-bold fs-3 mt-2 text-warning">@Model.CommissionEstimee.ToString("F3") TND</div>
                 <div class="text-muted small">Commission estimée (PNC)</div>
             </div>
         </div>
@@ -52,10 +52,14 @@
 </div>
 
 <div class="row g-4">
+    <!-- Tableau 1: Mes dernières saisies d'états de ventes (PNC) -->
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
-            <div class="card-header fw-bold text-white" style="background:#d9230f;">
-                📋 Mes dernières saisies d'états de ventes
+            <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center py-3">
+                <span>📋 Mes dernières saisies d'états de ventes (PNC)</span>
+                <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-sm btn-light text-danger fw-bold shadow-sm">
+                    + Nouvelle saisie
+                </a>
             </div>
             <div class="card-body p-0">
                 @if (!Model.DerniersEtats.Any())
@@ -63,7 +67,7 @@
                     <div class="text-center text-muted py-5">
                         <div style="font-size:3rem;">📭</div>
                         <p class="mt-2">Aucun état de vente saisi pour le moment.</p>
-                        <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-danger btn-sm fw-bold">
+                        <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-danger btn-sm fw-bold mt-2">
                             + Saisir un nouvel état
                         </a>
                     </div>
@@ -80,6 +84,7 @@
                                     <th>PNC Vendeur</th>
                                     <th class="text-end">Total EUR</th>
                                     <th class="text-center">Statut</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -90,7 +95,7 @@
                                         <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
                                         <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.FN_NUMBER))</td>
                                         <td class="fw-semibold">@item.PNCVendeur?.name @item.PNCVendeur?.First_name</td>
-                                        <td class="text-end fw-bold text-primary">@item.ChiffreAffairesEUR.ToString("F2") €</td>
+                                        <td class="text-end fw-bold text-danger">@item.ChiffreAffairesEUR.ToString("F2") €</td>
                                         <td class="text-center">
                                             @if (item.Statut == "Saisi")
                                             {
@@ -105,67 +110,9 @@
                                                 <span class="badge bg-success">✅ Clôturé</span>
                                             }
                                         </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Tableau des dernières Offres -->
-<div class="row g-4 mt-2">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header fw-bold text-white" style="background:#373a3c;">
-                🎁 Mes dernières saisies d'offres à bord
-            </div>
-            <div class="card-body p-0">
-                @if (!Model.DerniersEtatsOffres.Any())
-                {
-                    <div class="text-center text-muted py-4">
-                        <div style="font-size:2.5rem;">🎁</div>
-                        <p class="mt-2 small">Aucune offre saisie pour le moment.</p>
-                        <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-secondary btn-sm fw-bold">
-                            + Saisir des offres
-                        </a>
-                    </div>
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>N° FL</th>
-                                    <th>Date</th>
-                                    <th>Vol</th>
-                                    <th>PNC Vendeur</th>
-                                    <th class="text-end">Valeur Offres (€)</th>
-                                    <th class="text-center">Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.DerniersEtatsOffres)
-                                {
-                                    <tr>
-                                        <td><span class="badge bg-dark">@item.NumeroFeuilleLigne</span></td>
-                                        <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
-                                        <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.FN_NUMBER))</td>
-                                        <td class="text-muted fst-italic">-</td>
-                                        <td class="text-end fw-bold text-warning">@item.ChiffreAffairesEUR.ToString("F2") €</td>
                                         <td class="text-center">
-                                            @if (item.Statut == "Saisi")
-                                            {
-                                                <span class="badge bg-warning text-dark">⏳ Saisi</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-success">✅ Clôturé</span>
-                                            }
+                                            <button class="btn btn-sm btn-outline-info me-1" onclick="voirDetails('vente', @item.Id)" title="Voir détails">👁️ Détails</button>
+                                            <a href="@Url.Action("ExporterVenteCSV", "Agent", new { id = item.Id })" class="btn btn-sm btn-outline-success" title="Télécharger CSV">📥 Exporter</a>
                                         </td>
                                     </tr>
                                 }
@@ -177,33 +124,95 @@
         </div>
     </div>
 
+    <!-- Carte Saisie rapide avec le Thème Bootstrap Simplex -->
     <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header fw-bold text-white" style="background:#373a3c;">⚡ Saisie rapide</div>
-            <div class="card-body d-grid gap-2">
-                <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-danger fw-bold">
-                    📋 Saisir état des ventes
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark text-white fw-bold py-3">⚡ Saisie rapide</div>
+            <div class="card-body d-grid gap-3 align-content-start py-4">
+                <a asp-controller="Agent" asp-action="SaisirVentes" class="btn btn-danger btn-lg fw-bold text-start p-3 shadow-sm">
+                    📋 Saisir état Ventes & Offres PNC
+                    <div class="small fw-normal text-white-50 mt-1">Saisie des ventes de vol et des articles promo</div>
                 </a>
-                <a asp-controller="Agent" asp-action="SaisirOffres" class="btn btn-outline-secondary">
-                    🎁 Saisir offres à bord
-                </a>
-                <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-outline-primary">
-                    📦 Saisir ventes FRS
-                </a>
-                <a asp-controller="Agent" asp-action="SaisirOffresFRS" class="btn btn-outline-warning text-dark">
-                    📦 Saisir offres FRS
+                <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-primary btn-lg fw-bold text-start p-3 shadow-sm">
+                    📦 Saisir état Ventes & Offres FRS
+                    <div class="small fw-normal text-white-50 mt-1">Saisie du bordereau fournisseur</div>
                 </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Tableau des dernières Saisies Ventes FRS -->
+<!-- Tableau 2: Mes dernières saisies d'offres à bord -->
 <div class="row g-4 mt-2">
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
-            <div class="card-header fw-bold text-white" style="background:#0275d8;">
-                📦 Mes dernières saisies de ventes FRS
+            <div class="card-header bg-dark text-white fw-bold py-3">
+                🎁 Mes dernières saisies d'offres à bord
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.DerniersEtatsOffres.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        <div style="font-size:2.5rem;">🎁</div>
+                        <p class="mt-2 small">Aucune offre saisie pour le moment.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N° FL</th>
+                                    <th>Date</th>
+                                    <th>Vol</th>
+                                    <th class="text-end">Valeur Offres (€)</th>
+                                    <th class="text-center">Statut</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.DerniersEtatsOffres)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-dark">@item.NumeroFeuilleLigne</span></td>
+                                        <td>@item.DateVol.ToString("dd/MM/yyyy")</td>
+                                        <td>@string.Join(" / ", item.VolsList.Select(v => v.Vol?.FN_NUMBER))</td>
+                                        <td class="text-end fw-bold text-warning">@item.ChiffreAffairesEUR.ToString("F2") €</td>
+                                        <td class="text-center">
+                                            @if (item.Statut == "Saisi")
+                                            {
+                                                <span class="badge bg-warning text-dark">⏳ Saisi</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">✅ Clôturé</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-info me-1" onclick="voirDetails('offre', @item.Id)" title="Voir détails">👁️ Détails</button>
+                                            <a href="@Url.Action("ExporterOffreCSV", "Agent", new { id = item.Id })" class="btn btn-sm btn-outline-success" title="Télécharger CSV">📥 Exporter</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau 3: Mes dernières saisies de ventes FRS -->
+<div class="row g-4 mt-2">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center py-3">
+                <span>📦 Mes dernières saisies de ventes FRS</span>
+                <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-sm btn-light text-primary fw-bold shadow-sm">
+                    + Nouvelle saisie FRS
+                </a>
             </div>
             <div class="card-body p-0">
                 @if (!Model.DerniersEtatsFRS.Any())
@@ -211,7 +220,7 @@
                     <div class="text-center text-muted py-4">
                         <div style="font-size:2.5rem;">📦</div>
                         <p class="mt-2 small">Aucune saisie de vente FRS pour le moment.</p>
-                        <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-primary btn-sm fw-bold">
+                        <a asp-controller="Agent" asp-action="SaisirVentesFRS" class="btn btn-primary btn-sm fw-bold mt-2">
                             + Saisir vente FRS
                         </a>
                     </div>
@@ -227,6 +236,7 @@
                                     <th>FL PNC Associée</th>
                                     <th class="text-end">Montant FRS (€)</th>
                                     <th class="text-center">Statut Contrôle</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -236,7 +246,7 @@
                                         <td><span class="badge bg-primary fs-6">@item.NumeroEtat</span></td>
                                         <td>@item.DateReception.ToString("dd/MM/yyyy")</td>
                                         <td><span class="badge bg-secondary">@(item.EtatDesVentes?.NumeroFeuilleLigne ?? "N/A")</span></td>
-                                        <td class="text-end fw-bold text-primary">@item.MontantFRS.ToString("F2") €</td>
+                                        <td class="text-end fw-bold text-primary">@item.ChiffreAffairesEUR.ToString("F2") €</td>
                                         <td class="text-center">
                                             @if (item.StatutControle == "En attente")
                                             {
@@ -251,6 +261,10 @@
                                                 <span class="badge bg-danger">⚠️ Écart</span>
                                             }
                                         </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-info me-1" onclick="voirDetails('venteFRS', @item.Id)" title="Voir détails">👁️ Détails</button>
+                                            <a href="@Url.Action("ExporterVenteFRSCSSV", "Agent", new { id = item.Id })" class="btn btn-sm btn-outline-success" title="Télécharger CSV">📥 Exporter</a>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -262,11 +276,11 @@
     </div>
 </div>
 
-<!-- Tableau des dernières Saisies Offres FRS -->
+<!-- Tableau 4: Mes dernières saisies d'offres FRS -->
 <div class="row g-4 mt-2 mb-4">
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
-            <div class="card-header fw-bold text-white" style="background:#f0ad4e;">
+            <div class="card-header bg-warning text-dark fw-bold py-3">
                 📦 Mes dernières saisies d'offres FRS
             </div>
             <div class="card-body p-0">
@@ -275,9 +289,6 @@
                     <div class="text-center text-muted py-4">
                         <div style="font-size:2.5rem;">🎁</div>
                         <p class="mt-2 small">Aucune saisie d'offre FRS pour le moment.</p>
-                        <a asp-controller="Agent" asp-action="SaisirOffresFRS" class="btn btn-warning btn-sm fw-bold text-dark">
-                            + Saisir offre FRS
-                        </a>
                     </div>
                 }
                 else
@@ -290,6 +301,7 @@
                                     <th>Date Réception</th>
                                     <th>FL PNC Associée</th>
                                     <th class="text-center">Statut Contrôle</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -313,6 +325,10 @@
                                                 <span class="badge bg-danger">⚠️ Écart</span>
                                             }
                                         </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-info me-1" onclick="voirDetails('offreFRS', @item.Id)" title="Voir détails">👁️ Détails</button>
+                                            <a href="@Url.Action("ExporterOffreFRSCSSV", "Agent", new { id = item.Id })" class="btn btn-sm btn-outline-success" title="Télécharger CSV">📥 Exporter</a>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -323,3 +339,179 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Détails -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-header-title modal-title fw-bold" id="detailsModalLabel">🔍 Détails de la saisie</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body p-4" id="detailsModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function voirDetails(type, id) {
+        var modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+        var body = document.getElementById('detailsModalBody');
+        body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+        modal.show();
+
+        var url = '';
+        if (type === 'vente') url = '/Agent/GetDetailsVente/' + id;
+        else if (type === 'offre') url = '/Agent/GetDetailsOffre/' + id;
+        else if (type === 'venteFRS') url = '/Agent/GetDetailsVenteFRS/' + id;
+        else if (type === 'offreFRS') url = '/Agent/GetDetailsOffreFRS/' + id;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                var html = '';
+                if (type === 'vente') {
+                    html += `<div class="row mb-3 pb-2 border-bottom">
+                                <div class="col-md-6"><strong>N° FL :</strong> <span class="badge bg-secondary fs-6">${data.fl}</span></div>
+                                <div class="col-md-6"><strong>Date :</strong> ${data.date}</div>
+                                <div class="col-md-6"><strong>Vol :</strong> ${data.vol}</div>
+                                <div class="col-md-6"><strong>PNC Vendeur :</strong> ${data.pnc}</div>
+                             </div>`;
+                    html += `<h6 class="fw-bold mb-2">Articles vendus :</h6>
+                             <table class="table table-bordered table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Désignation</th>
+                                        <th class="text-center">Dotation</th>
+                                        <th class="text-center">Compl.</th>
+                                        <th class="text-center">Qté Vendue</th>
+                                        <th class="text-end">Prix U. (€)</th>
+                                        <th class="text-end">Total (€)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    data.lignes.forEach(l => {
+                        html += `<tr>
+                                    <td><strong>${l.code}</strong></td>
+                                    <td>${l.designation}</td>
+                                    <td class="text-center">${l.dotation}</td>
+                                    <td class="text-center">${l.complement}</td>
+                                    <td class="text-center fw-bold">${l.vendue}</td>
+                                    <td class="text-end">${l.prixUnit.toFixed(2)} €</td>
+                                    <td class="text-end fw-bold">${l.total.toFixed(2)} €</td>
+                                 </tr>`;
+                    });
+                    html += `</tbody></table>
+                             <div class="text-end fw-bold fs-5 text-danger">Total : ${data.totalEur.toFixed(2)} € (${data.totalTnd.toFixed(3)} TND)</div>`;
+                } else if (type === 'offre') {
+                    html += `<div class="row mb-3 pb-2 border-bottom">
+                                <div class="col-md-6"><strong>N° FL :</strong> <span class="badge bg-dark fs-6">${data.fl}</span></div>
+                                <div class="col-md-6"><strong>Date :</strong> ${data.date}</div>
+                                <div class="col-md-6"><strong>Vol :</strong> ${data.vol}</div>
+                             </div>`;
+                    html += `<h6 class="fw-bold mb-2">Offres accordées :</h6>
+                             <table class="table table-bordered table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Désignation</th>
+                                        <th class="text-center">Dotation</th>
+                                        <th class="text-center">Compl.</th>
+                                        <th class="text-center">Qté Offerte</th>
+                                        <th class="text-end">Prix Promo (€)</th>
+                                        <th class="text-end">Total Promo (€)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    data.lignes.forEach(l => {
+                        html += `<tr>
+                                    <td><strong>${l.code}</strong></td>
+                                    <td>${l.designation}</td>
+                                    <td class="text-center">${l.dotation}</td>
+                                    <td class="text-center">${l.complement}</td>
+                                    <td class="text-center fw-bold text-warning">${l.offerte}</td>
+                                    <td class="text-end">${l.prixPromo.toFixed(2)} €</td>
+                                    <td class="text-end fw-bold">${l.total.toFixed(2)} €</td>
+                                 </tr>`;
+                    });
+                    html += `</tbody></table>
+                             <div class="text-end fw-bold fs-5 text-warning">Valeur Totale : ${data.valeurEur.toFixed(2)} €</div>`;
+                } else if (type === 'venteFRS') {
+                    html += `<div class="row mb-3 pb-2 border-bottom">
+                                <div class="col-md-6"><strong>N° État FRS :</strong> <span class="badge bg-primary fs-6">${data.numeroEtat}</span></div>
+                                <div class="col-md-6"><strong>Date Réception :</strong> ${data.dateReception}</div>
+                                <div class="col-md-6"><strong>FL PNC Associée :</strong> ${data.flPnc}</div>
+                                <div class="col-md-6"><strong>Statut Contrôle :</strong> ${data.statut}</div>
+                             </div>`;
+                    html += `<h6 class="fw-bold mb-2">Ventes FRS déclarées :</h6>
+                             <table class="table table-bordered table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Désignation</th>
+                                        <th class="text-center">Qté Vendue FRS</th>
+                                        <th class="text-end">Prix U. FRS (€)</th>
+                                        <th class="text-end">Valeur (€)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    data.lignes.forEach(l => {
+                        html += `<tr>
+                                    <td><strong>${l.code}</strong></td>
+                                    <td>${l.designation}</td>
+                                    <td class="text-center fw-bold">${l.vendue}</td>
+                                    <td class="text-end">${l.prixUnit.toFixed(2)} €</td>
+                                    <td class="text-end fw-bold">${l.valeur.toFixed(2)} €</td>
+                                 </tr>`;
+                    });
+                    html += `</tbody></table>
+                             <div class="text-end fw-bold fs-5 text-primary">Montant FRS Total : ${data.totalEur.toFixed(2)} €</div>`;
+                } else if (type === 'offreFRS') {
+                    html += `<div class="row mb-3 pb-2 border-bottom">
+                                <div class="col-md-6"><strong>N° État FRS :</strong> <span class="badge bg-warning text-dark fs-6">${data.numeroEtat}</span></div>
+                                <div class="col-md-6"><strong>Date Réception :</strong> ${data.dateReception}</div>
+                                <div class="col-md-6"><strong>FL PNC Associée :</strong> ${data.flPnc}</div>
+                                <div class="col-md-6"><strong>Statut Contrôle :</strong> ${data.statut}</div>
+                             </div>`;
+                    html += `<h6 class="fw-bold mb-2">Offres FRS déclarées :</h6>
+                             <table class="table table-bordered table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Désignation</th>
+                                        <th class="text-center">Dotation Initiale FRS</th>
+                                        <th class="text-center">Qté Restante FRS</th>
+                                        <th class="text-center">Qté Consommée FRS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    data.lignes.forEach(l => {
+                        html += `<tr>
+                                    <td><strong>${l.code}</strong></td>
+                                    <td>${l.designation}</td>
+                                    <td class="text-center">${l.dotation}</td>
+                                    <td class="text-center">${l.restante}</td>
+                                    <td class="text-center fw-bold text-primary">${l.consommee}</td>
+                                 </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                }
+                body.innerHTML = html;
+            })
+            .catch(err => {
+                body.innerHTML = '<div class="alert alert-danger">Erreur lors de la récupération des détails.</div>';
+            });
+    }
+</script>
+}

@@ -131,17 +131,23 @@ namespace ApplicationDeVente.Controllers
             using var workbook = new ClosedXML.Excel.XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Modèle Vols");
             
-            worksheet.Cell(1, 1).Value = "Numéro Vol";
-            worksheet.Cell(1, 2).Value = "Origine";
-            worksheet.Cell(1, 3).Value = "Destination";
+            worksheet.Cell(1, 1).Value = "FN_NUMBER";
+            worksheet.Cell(1, 2).Value = "DAY_OF_ORIGIN";
+            worksheet.Cell(1, 3).Value = "DEP_AP_ACTUAL";
+            worksheet.Cell(1, 4).Value = "ARR_AP_ACTUAL";
+            worksheet.Cell(1, 5).Value = "Actif";
             
-            worksheet.Range("A1:C1").Style.Font.Bold = true;
-            worksheet.Range("A1:C1").Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightGray;
-            worksheet.Columns().AdjustToContents();
+            worksheet.Range("A1:E1").Style.Font.Bold = true;
+            worksheet.Range("A1:E1").Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightGray;
 
+            // Ligne d'exemple
             worksheet.Cell(2, 1).Value = "TU202";
-            worksheet.Cell(2, 2).Value = "TUN";
-            worksheet.Cell(2, 3).Value = "CDG";
+            worksheet.Cell(2, 2).Value = DateTime.Today.ToString("dd/MM/yyyy");
+            worksheet.Cell(2, 3).Value = "TUN";
+            worksheet.Cell(2, 4).Value = "CDG";
+            worksheet.Cell(2, 5).Value = "Oui";
+
+            worksheet.Columns().AdjustToContents();
 
             using var stream = new System.IO.MemoryStream();
             workbook.SaveAs(stream);
@@ -162,33 +168,67 @@ namespace ApplicationDeVente.Controllers
                 using var stream = new System.IO.MemoryStream();
                 await fichierExcel.CopyToAsync(stream);
                 using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
-                var rows = workbook.Worksheet(1).RangeUsed().RowsUsed().Skip(1);
+                var worksheet = workbook.Worksheet(1);
+                var range = worksheet.RangeUsed();
+                if (range == null || range.RowsUsed().Count() <= 1)
+                {
+                    TempData["Erreur"] = "Le fichier Excel est vide.";
+                    return RedirectToAction(nameof(Index));
+                }
 
+                var headerRow = range.FirstRow();
+                int colFn = 1, colDate = 2, colDep = 3, colArr = 4, colActif = 5;
+
+                // Détection dynamique des colonnes par nom
+                for (int c = 1; c <= headerRow.LastCellUsed().Address.ColumnNumber; c++)
+                {
+                    string name = headerRow.Cell(c).GetString().Trim().ToUpper();
+                    if (name.Contains("FN_NUMBER") || name.Contains("NUMÉRO") || name.Contains("VOL")) colFn = c;
+                    else if (name.Contains("DAY_OF_ORIGIN") || name.Contains("DATE")) colDate = c;
+                    else if (name.Contains("DEP_AP_ACTUAL") || name.Contains("DEP") || name.Contains("ORIGINE")) colDep = c;
+                    else if (name.Contains("ARR_AP_ACTUAL") || name.Contains("ARR") || name.Contains("DEST")) colArr = c;
+                    else if (name.Contains("ACTIF") || name.Contains("STATUT")) colActif = c;
+                }
+
+                var rows = range.RowsUsed().Skip(1);
                 int ajoutes = 0;
-                int ignores = 0;
+                int majs = 0;
 
                 foreach (var row in rows)
                 {
-                    string numVol = row.Cell(1).GetValue<string>().Trim().ToUpper();
-                    string origine = row.Cell(2).GetValue<string>().Trim().ToUpper();
-                    string dest = row.Cell(3).GetValue<string>().Trim().ToUpper();
+                    string numVol = GetCellString(row.Cell(colFn)).ToUpper();
+                    if (string.IsNullOrEmpty(numVol)) continue;
 
-                    if (!string.IsNullOrEmpty(numVol))
+                    DateTime dateVol = ParseCellDate(row.Cell(colDate));
+                    string origine = GetCellString(row.Cell(colDep)).ToUpper();
+                    string dest = GetCellString(row.Cell(colArr)).ToUpper();
+                    string actifStr = GetCellString(row.Cell(colActif)).ToLower();
+                    bool actif = string.IsNullOrEmpty(actifStr) || actifStr == "oui" || actifStr == "true" || actifStr == "1" || actifStr == "actif";
+
+                    var existing = await _db.Vols.FirstOrDefaultAsync(v => v.FN_NUMBER == numVol && v.DAY_OF_ORIGIN.Date == dateVol.Date);
+                    if (existing != null)
                     {
-                        if (!_db.Vols.Any(v => v.FN_NUMBER == numVol))
+                        existing.DEP_AP_ACTUAL = !string.IsNullOrEmpty(origine) ? origine : existing.DEP_AP_ACTUAL;
+                        existing.ARR_AP_ACTUAL = !string.IsNullOrEmpty(dest) ? dest : existing.ARR_AP_ACTUAL;
+                        existing.Actif = actif;
+                        majs++;
+                    }
+                    else
+                    {
+                        _db.Vols.Add(new Vol
                         {
-                            _db.Vols.Add(new Vol { FN_NUMBER = numVol, DEP_AP_ACTUAL = origine, ARR_AP_ACTUAL = dest, Actif = true });
-                            ajoutes++;
-                        }
-                        else
-                        {
-                            ignores++;
-                        }
+                            FN_NUMBER = numVol,
+                            DAY_OF_ORIGIN = dateVol,
+                            DEP_AP_ACTUAL = origine,
+                            ARR_AP_ACTUAL = dest,
+                            Actif = actif
+                        });
+                        ajoutes++;
                     }
                 }
 
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Importation : {ajoutes} vols ajoutés, {ignores} ignorés.";
+                TempData["Succes"] = $"Importation terminée : {ajoutes} vol(s) ajouté(s), {majs} mis à jour.";
             }
             catch (Exception ex)
             {
@@ -196,6 +236,25 @@ namespace ApplicationDeVente.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private static string GetCellString(ClosedXML.Excel.IXLCell cell)
+        {
+            if (cell == null || cell.IsEmpty()) return string.Empty;
+            return cell.GetString().Trim();
+        }
+
+        private static DateTime ParseCellDate(ClosedXML.Excel.IXLCell cell)
+        {
+            if (cell == null || cell.IsEmpty()) return DateTime.Today;
+            if (cell.DataType == ClosedXML.Excel.XLDataType.DateTime) return cell.GetDateTime();
+            if (cell.DataType == ClosedXML.Excel.XLDataType.Number)
+            {
+                try { return DateTime.FromOADate(cell.GetDouble()); } catch { }
+            }
+            string str = cell.GetString().Trim();
+            if (DateTime.TryParse(str, out DateTime dt)) return dt;
+            return DateTime.Today;
         }
     }
 }

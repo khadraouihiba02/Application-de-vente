@@ -164,7 +164,7 @@ namespace ApplicationDeVente.Controllers
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 TempData["Erreur"] = "Erreur lors de l'importation : Vérifiez le format de votre fichier. L'ordre attendu : Code, Nom, Description, Prix, DateDebut, DateFin.";
             }

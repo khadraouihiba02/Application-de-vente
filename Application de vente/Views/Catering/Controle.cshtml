@@ -90,6 +90,13 @@ else
         var isConforme = hasFRS && Math.Abs(ecart!.Value) < 0.01m;
         var borderColor = !hasFRS ? "#d9534f" : (frs!.StatutControle == "Conforme" ? "#5cb85c" : (frs.StatutControle == "En attente" ? "#f0ad4e" : "#d9534f"));
 
+        var etatsOffres = ViewBag.EtatsOffres as List<ApplicationDeVente.Models.EtatDesOffres>;
+        var offresFRS = ViewBag.OffresFRS as Dictionary<int, ApplicationDeVente.Models.EtatDesOffresFRS>;
+        var etatOffre = etatsOffres?.FirstOrDefault(o => o.NumeroFeuilleLigne == etatVente.NumeroFeuilleLigne && o.DateVol == etatVente.DateVol);
+        var hasOffreFRS = etatOffre != null && offresFRS != null && offresFRS.ContainsKey(etatOffre.Id);
+        var offreFRS = hasOffreFRS ? offresFRS[etatOffre.Id] : null;
+
+
     <div class="card border-0 shadow-sm mb-3" style="border-left: 5px solid @borderColor;">
         <div class="card-header d-flex justify-content-between align-items-center py-2 bg-light">
             <div>
@@ -158,6 +165,38 @@ else
                     <div class="d-flex justify-content-between border-top pt-2">
                         <span class="fw-bold">Total Agent :</span>
                         <span class="fw-bold text-primary fs-6">@etatVente.ChiffreAffairesEUR.ToString("F2") €</span>
+
+                    @if (etatOffre != null)
+                    {
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="fw-bold text-dark mb-2">🎁 Offres Saisies (PNC)</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-2">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Article</th>
+                                            <th class="text-center">Qté Offerte</th>
+                                            <th class="text-end">Valeur</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var ligneO in etatOffre.Lignes)
+                                        {
+                                            <tr>
+                                                <td class="small">@(ligneO.Article?.CodeArticle ?? "?")</td>
+                                                <td class="text-center">@ligneO.QuantiteOfferte</td>
+                                                <td class="text-end fw-bold">@((ligneO.QuantiteOfferte * ligneO.PrixUnitairePromoEUR).ToString("F2")) €</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between pt-2">
+                                <span class="fw-bold text-muted">Total Offres :</span>
+                                <span class="fw-bold text-warning fs-6">@etatOffre.ChiffreAffairesEUR.ToString("F2") €</span>
+                            </div>
+                        </div>
+                    }
                     </div>
                 </div>
 
@@ -216,6 +255,48 @@ else
                         <!-- Actions de validation -->
                         @if (frs.StatutControle == "En attente")
                         {
+
+                        @if (etatOffre != null)
+                        {
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="fw-bold text-dark mb-2">🎁 Offres Saisies (FRS)</h6>
+                                @if (!hasOffreFRS)
+                                {
+                                    <div class="text-center text-muted py-2">
+                                        <p class="small mb-0">Aucune offre FRS saisie.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-2">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Article</th>
+                                                    <th class="text-center">Qté Consommée FRS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var ligneOF in offreFRS!.Lignes)
+                                                {
+                                                    <tr>
+                                                        <td class="small">@ligneOF.CodeArticle</td>
+                                                        <td class="text-center fw-bold">@ligneOF.QuantiteConsommeeFRS</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    @if(offreFRS.StatutControle == "Écart")
+                                    {
+                                        <div class="alert alert-danger py-1 mb-2 mt-2 text-center small">
+                                            ⚠️ Écart détecté sur les offres
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+
                             <div class="d-flex gap-2 justify-content-end">
                                 <form method="post" asp-action="ValiderControle" class="d-inline">
                                     @Html.AntiForgeryToken()

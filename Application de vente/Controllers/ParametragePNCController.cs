@@ -104,30 +104,31 @@ namespace ApplicationDeVente.Controllers
             using var workbook = new ClosedXML.Excel.XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Modèle Cabin Crew");
             
-            // En-têtes
-            worksheet.Cell(1, 1).Value = "Day_of_origin";
-            worksheet.Cell(1, 2).Value = "FlightNumber";
+            // En-têtes correspondants à la saisie manuelle
+            worksheet.Cell(1, 1).Value = "FlightNumber";
+            worksheet.Cell(1, 2).Value = "Day_of_origin";
             worksheet.Cell(1, 3).Value = "departure";
             worksheet.Cell(1, 4).Value = "destination";
             worksheet.Cell(1, 5).Value = "TLC";
-            worksheet.Cell(1, 6).Value = "name";
-            worksheet.Cell(1, 7).Value = "First_name";
-            worksheet.Cell(1, 8).Value = "Rank";
+            worksheet.Cell(1, 6).Value = "Rank";
+            worksheet.Cell(1, 7).Value = "name";
+            worksheet.Cell(1, 8).Value = "First_name";
             
             // Style
             worksheet.Range("A1:H1").Style.Font.Bold = true;
             worksheet.Range("A1:H1").Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightGray;
-            worksheet.Columns().AdjustToContents();
 
             // Exemple
-            worksheet.Cell(2, 1).Value = DateTime.Today.ToString("dd/MM/yyyy");
-            worksheet.Cell(2, 2).Value = "TU202";
+            worksheet.Cell(2, 1).Value = "TU202";
+            worksheet.Cell(2, 2).Value = DateTime.Today.ToString("dd/MM/yyyy");
             worksheet.Cell(2, 3).Value = "TUN";
             worksheet.Cell(2, 4).Value = "CDG";
             worksheet.Cell(2, 5).Value = "BA1";
-            worksheet.Cell(2, 6).Value = "BEN ALI";
-            worksheet.Cell(2, 7).Value = "AHMED";
-            worksheet.Cell(2, 8).Value = "PNC";
+            worksheet.Cell(2, 6).Value = "PNC";
+            worksheet.Cell(2, 7).Value = "BEN ALI";
+            worksheet.Cell(2, 8).Value = "AHMED";
+
+            worksheet.Columns().AdjustToContents();
 
             using var stream = new System.IO.MemoryStream();
             workbook.SaveAs(stream);
@@ -151,49 +152,88 @@ namespace ApplicationDeVente.Controllers
                 await fichierExcel.CopyToAsync(stream);
                 using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
                 var worksheet = workbook.Worksheet(1);
-                var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Ignorer l'en-tête
+                var range = worksheet.RangeUsed();
+                if (range == null || range.RowsUsed().Count() <= 1)
+                {
+                    TempData["Erreur"] = "Le fichier Excel est vide.";
+                    return RedirectToAction(nameof(Index));
+                }
 
+                var headerRow = range.FirstRow();
+                int colFn = 1, colDate = 2, colDep = 3, colArr = 4, colTlc = 5, colRank = 6, colNom = 7, colPrenom = 8;
+
+                // Détection dynamique des colonnes par nom
+                for (int c = 1; c <= headerRow.LastCellUsed().Address.ColumnNumber; c++)
+                {
+                    string h = headerRow.Cell(c).GetString().Trim().ToUpper();
+                    if (h.Contains("FLIGHTNUMBER") || h.Contains("VOL") || h.Contains("FN_NUMBER")) colFn = c;
+                    else if (h.Contains("DAY_OF_ORIGIN") || h.Contains("DATE")) colDate = c;
+                    else if (h.Contains("DEPARTURE") || h.Contains("ORIGINE") || h.Contains("DEP")) colDep = c;
+                    else if (h.Contains("DESTINATION") || h.Contains("DEST") || h.Contains("ARR")) colArr = c;
+                    else if (h.Contains("TLC") || h.Contains("MATRICULE")) colTlc = c;
+                    else if (h.Contains("RANK") || h.Contains("GRADE")) colRank = c;
+                    else if (h == "NAME" || h.Contains("NOM")) colNom = c;
+                    else if (h.Contains("FIRST_NAME") || h.Contains("PRÉNOM") || h.Contains("PRENOM")) colPrenom = c;
+                }
+
+                var rows = range.RowsUsed().Skip(1);
                 int ajoutes = 0;
 
                 foreach (var row in rows)
                 {
-                    string dateStr = row.Cell(1).GetValue<string>().Trim();
-                    string fn = row.Cell(2).GetValue<string>().Trim().ToUpper();
-                    string dep = row.Cell(3).GetValue<string>().Trim().ToUpper();
-                    string arr = row.Cell(4).GetValue<string>().Trim().ToUpper();
-                    string tlc = row.Cell(5).GetValue<string>().Trim();
-                    string nom = row.Cell(6).GetValue<string>().Trim();
-                    string prenom = row.Cell(7).GetValue<string>().Trim();
-                    string rank = row.Cell(8).GetValue<string>().Trim();
+                    string fn = GetCellString(row.Cell(colFn)).ToUpper();
+                    string tlc = GetCellString(row.Cell(colTlc));
+                    if (string.IsNullOrEmpty(fn) || string.IsNullOrEmpty(tlc)) continue;
 
-                    if (!string.IsNullOrEmpty(tlc) && !string.IsNullOrEmpty(fn))
+                    DateTime dateOrigin = ParseCellDate(row.Cell(colDate));
+                    string dep = GetCellString(row.Cell(colDep)).ToUpper();
+                    string arr = GetCellString(row.Cell(colArr)).ToUpper();
+                    string rank = GetCellString(row.Cell(colRank));
+                    string nom = GetCellString(row.Cell(colNom));
+                    string prenom = GetCellString(row.Cell(colPrenom));
+
+                    _db.PNCs.Add(new PNC
                     {
-                        DateTime dateOrigin = DateTime.TryParse(dateStr, out DateTime d) ? d : DateTime.Today;
-
-                        _db.PNCs.Add(new PNC
-                        {
-                            Day_of_origin = dateOrigin,
-                            FlightNumber = fn,
-                            departure = dep,
-                            destination = arr,
-                            TLC = tlc,
-                            name = nom,
-                            First_name = prenom,
-                            Rank = rank
-                        });
-                        ajoutes++;
-                    }
+                        FlightNumber = fn,
+                        Day_of_origin = dateOrigin,
+                        departure = dep,
+                        destination = arr,
+                        TLC = tlc,
+                        Rank = rank,
+                        name = nom,
+                        First_name = prenom
+                    });
+                    ajoutes++;
                 }
 
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Importation terminée : {ajoutes} Crews ajoutés.";
+                TempData["Succes"] = $"Importation terminée : {ajoutes} Cabin Crew(s) ajouté(s).";
             }
             catch (Exception ex)
             {
-                TempData["Erreur"] = "Erreur lors de l'importation. Vérifiez que le fichier correspond au modèle. Détail: " + ex.Message;
+                TempData["Erreur"] = "Erreur lors de l'importation. Détail: " + ex.Message;
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private static string GetCellString(ClosedXML.Excel.IXLCell cell)
+        {
+            if (cell == null || cell.IsEmpty()) return string.Empty;
+            return cell.GetString().Trim();
+        }
+
+        private static DateTime ParseCellDate(ClosedXML.Excel.IXLCell cell)
+        {
+            if (cell == null || cell.IsEmpty()) return DateTime.Today;
+            if (cell.DataType == ClosedXML.Excel.XLDataType.DateTime) return cell.GetDateTime();
+            if (cell.DataType == ClosedXML.Excel.XLDataType.Number)
+            {
+                try { return DateTime.FromOADate(cell.GetDouble()); } catch { }
+            }
+            string str = cell.GetString().Trim();
+            if (DateTime.TryParse(str, out DateTime dt)) return dt;
+            return DateTime.Today;
         }
     }
 }

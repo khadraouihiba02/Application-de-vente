@@ -89,6 +89,26 @@ namespace ApplicationDeVente.Controllers
                 .Where(f => ventesIds.Contains(f.EtatDesVentesId))
                 .ToDictionaryAsync(f => f.EtatDesVentesId);
 
+            // ── Chargement des Offres correspondantes ──
+            var queryOffres = _db.EtatsDesOffres
+                .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
+                .Include(e => e.Lignes).ThenInclude(l => l.Article)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+                queryOffres = queryOffres.Where(e => e.NumeroFeuilleLigne.Contains(search));
+
+            var etatsOffres = await queryOffres.OrderByDescending(e => e.Id).ToListAsync();
+
+            var offresIds = etatsOffres.Select(e => e.Id).ToList();
+            var offresFRS = await _db.EtatsDesOffresFRS
+                .Include(f => f.Lignes)
+                .Where(f => offresIds.Contains(f.EtatDesOffresId))
+                .ToDictionaryAsync(f => f.EtatDesOffresId);
+
+            ViewBag.EtatsOffres = etatsOffres;
+            ViewBag.OffresFRS = offresFRS;
+
             var vm = new ControleAgentFRSViewModel
             {
                 EtatsVentes = etatsVentes,
@@ -105,11 +125,29 @@ namespace ApplicationDeVente.Controllers
             if (frs != null)
             {
                 frs.StatutControle = statut;
+
+                // Trouver l'offre FRS associée (si elle existe, elle partage le même numéro d'état ou la même date/FL)
+                var etatVentes = await _db.EtatsDesVentes.FindAsync(frs.EtatDesVentesId);
+                if (etatVentes != null)
+                {
+                    var etatOffres = await _db.EtatsDesOffres.FirstOrDefaultAsync(o => o.NumeroFeuilleLigne == etatVentes.NumeroFeuilleLigne && o.DateVol == etatVentes.DateVol);
+                    if (etatOffres != null)
+                    {
+                        var offreFRS = await _db.EtatsDesOffresFRS.FirstOrDefaultAsync(o => o.EtatDesOffresId == etatOffres.Id);
+                        if (offreFRS != null)
+                        {
+                            offreFRS.StatutControle = statut;
+                        }
+                    }
+                }
+
                 await _db.SaveChangesAsync();
-                TempData["Succes"] = $"Le statut de l'état FRS a été mis à jour : {statut}.";
+                TempData["Succes"] = $"Le statut de l'état FRS (et Offres si applicable) a été mis à jour : {statut}.";
             }
             return RedirectToAction(nameof(Controle));
         }
+
+
 
         // ── Récapitulatif Mensuel ─────────────────────────────────────
         [HttpGet]
