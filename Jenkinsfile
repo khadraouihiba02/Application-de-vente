@@ -21,8 +21,8 @@ pipeline {
             }
         }
 
-        // ─── Étape 2 + 3 + 4 : Restore, Build, Test dans un conteneur .NET 8 ─
-        stage('Restore - Build - Test') {
+        // ─── Étape 2 à 5 : Code Quality (Sonar), Build & Test ────────────────
+        stage('Code Quality & Build') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/dotnet/sdk:8.0'
@@ -30,13 +30,30 @@ pipeline {
                     args '-v /root/.nuget/packages:/root/.nuget/packages'
                 }
             }
+            environment {
+                SONAR_TOKEN = 'sqp_a00a53e8d355c2d972e47141656428e7c92235ce'
+                SONAR_HOST_URL = 'http://host.docker.internal:9000'
+            }
             stages {
-                stage('Restore') {
+                stage('Prepare SonarScanner') {
                     steps {
-                        echo '--- Restauration des packages NuGet ---'
-                        sh "dotnet restore \"${APP_PROJECT}\""
-                        sh "dotnet restore \"${TEST_PROJECT}\""
-                        echo 'Packages NuGet restaures avec succes.'
+                        echo '--- Installation de Java (requis pour Sonar) et SonarScanner ---'
+                        sh '''
+                            apt-get update && apt-get install -y default-jre
+                            dotnet tool install --global dotnet-sonarscanner || true
+                        '''
+                    }
+                }
+
+                stage('Restore & Sonar Begin') {
+                    steps {
+                        echo '--- Demarrage de l analyse SonarQube ---'
+                        sh '''
+                            export PATH="$PATH:/root/.dotnet/tools"
+                            dotnet sonarscanner begin /k:"VAB" /d:sonar.host.url="${SONAR_HOST_URL}" /d:sonar.token="${SONAR_TOKEN}"
+                            dotnet restore "${APP_PROJECT}"
+                            dotnet restore "${TEST_PROJECT}"
+                        '''
                     }
                 }
 
@@ -44,7 +61,6 @@ pipeline {
                     steps {
                         echo '--- Compilation de la solution .NET 8 ---'
                         sh "dotnet build \"${APP_PROJECT}\" --configuration Release --no-restore"
-                        echo 'Projet compile avec succes.'
                     }
                 }
 
@@ -52,15 +68,21 @@ pipeline {
                     steps {
                         echo '--- Execution des tests unitaires xUnit ---'
                         sh "dotnet test \"${TEST_PROJECT}\" --no-restore --verbosity normal --logger \"trx;LogFileName=test_results.trx\""
-                        echo 'Tests unitaires reussis.'
                     }
                     post {
                         always {
                             junit allowEmptyResults: true, testResults: '**/test_results.trx'
                         }
-                        failure {
-                            echo 'Des tests ont echoue ! Le deploiement Docker est annule.'
-                        }
+                    }
+                }
+
+                stage('Sonar End') {
+                    steps {
+                        echo '--- Envoi des resultats a SonarQube ---'
+                        sh '''
+                            export PATH="$PATH:/root/.dotnet/tools"
+                            dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+                        '''
                     }
                 }
             }
