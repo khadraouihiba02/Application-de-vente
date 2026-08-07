@@ -50,7 +50,12 @@ pipeline {
                         echo '--- Demarrage de l analyse SonarQube ---'
                         sh '''
                             export PATH="$PATH:/root/.dotnet/tools"
-                            dotnet sonarscanner begin /k:"VAB" /d:sonar.host.url="${SONAR_HOST_URL}" /d:sonar.token="${SONAR_TOKEN}"
+                            dotnet sonarscanner begin \\
+                                /k:"VAB" \\
+                                /d:sonar.host.url="${SONAR_HOST_URL}" \\
+                                /d:sonar.token="${SONAR_TOKEN}" \\
+                                /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \\
+                                /d:sonar.cs.vstest.reportsPaths="**/test_results.trx"
                             dotnet restore "${APP_PROJECT}"
                             dotnet restore "${TEST_PROJECT}"
                         '''
@@ -66,8 +71,15 @@ pipeline {
 
                 stage('Unit Tests') {
                     steps {
-                        echo '--- Execution des tests unitaires xUnit ---'
-                        sh "dotnet test \"${TEST_PROJECT}\" --no-restore --verbosity normal --logger \"trx;LogFileName=test_results.trx\""
+                        echo '--- Execution des tests unitaires avec couverture de code ---'
+                        sh '''
+                            dotnet test "${TEST_PROJECT}" \\
+                                --no-restore \\
+                                --verbosity normal \\
+                                --logger "trx;LogFileName=test_results.trx" \\
+                                --collect:"XPlat Code Coverage" \\
+                                -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+                        '''
                     }
                     post {
                         always {

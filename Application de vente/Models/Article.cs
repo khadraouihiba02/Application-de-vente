@@ -11,16 +11,16 @@ namespace ApplicationDeVente.Models
         [Required(ErrorMessage = "Le code article est obligatoire.")]
         [StringLength(50)]
         [Display(Name = "Code Article")]
-        public string CodeArticle { get; set; }
+        public required string CodeArticle { get; set; }
 
         [Required(ErrorMessage = "Le nom de l'article est obligatoire.")]
         [StringLength(100)]
         [Display(Name = "Nom de l'Article")]
-        public string NomArticle { get; set; }
+        public required string NomArticle { get; set; }
 
         [StringLength(250)]
         [Display(Name = "Description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required(ErrorMessage = "Le prix unitaire est obligatoire.")]
         [Column(TypeName = "decimal(18,2)")]

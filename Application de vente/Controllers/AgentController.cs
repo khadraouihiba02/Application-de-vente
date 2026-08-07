@@ -216,7 +216,7 @@ namespace ApplicationDeVente.Controllers
                 .Select(e => new SelectListItem
                 {
                     Value = e.Id.ToString(),
-                    Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
+                    Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol?.FN_NUMBER ?? "N/A" : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
                 })
                 .ToListAsync();
 
@@ -288,34 +288,37 @@ namespace ApplicationDeVente.Controllers
             {
                 // Trouver l'ID de l'état des offres PNC associé s'il existe
                 var etatVentesPNC = await _db.EtatsDesVentes.FindAsync(vm.EtatDesVentesId);
-                var etatOffresPNC = await _db.EtatsDesOffres.FirstOrDefaultAsync(o => o.NumeroFeuilleLigne == etatVentesPNC.NumeroFeuilleLigne && o.DateVol == etatVentesPNC.DateVol);
-
-                if (etatOffresPNC != null)
+                if (etatVentesPNC != null)
                 {
-                    var lignesOffresFiltrees = vm.LignesOffres.Where(l => l.DotationInitialeFRS > 0 || l.QuantiteRestanteFRS > 0).ToList();
-                    var etatOffresFRS = new EtatDesOffresFRS
-                    {
-                        NumeroEtat = vm.NumeroEtat,
-                        DateReception = vm.DateReception,
-                        EtatDesOffresId = etatOffresPNC.Id,
-                        StatutControle = "En attente"
-                    };
+                    var etatOffresPNC = await _db.EtatsDesOffres.FirstOrDefaultAsync(o => o.NumeroFeuilleLigne == etatVentesPNC.NumeroFeuilleLigne && o.DateVol == etatVentesPNC.DateVol);
 
-                    foreach (var ligne in lignesOffresFiltrees)
+                    if (etatOffresPNC != null)
                     {
-                        int qteConsommee = ligne.DotationInitialeFRS - ligne.QuantiteRestanteFRS;
-                        if (qteConsommee < 0) qteConsommee = 0;
-
-                        etatOffresFRS.Lignes.Add(new LigneOffreFRS
+                        var lignesOffresFiltrees = vm.LignesOffres.Where(l => l.DotationInitialeFRS > 0 || l.QuantiteRestanteFRS > 0).ToList();
+                        var etatOffresFRS = new EtatDesOffresFRS
                         {
-                            CodeArticle = ligne.CodeArticle,
-                            NomArticle = ligne.Designation,
-                            DotationInitialeFRS = ligne.DotationInitialeFRS,
-                            QuantiteRestanteFRS = ligne.QuantiteRestanteFRS,
-                            QuantiteConsommeeFRS = qteConsommee
-                        });
+                            NumeroEtat = vm.NumeroEtat,
+                            DateReception = vm.DateReception,
+                            EtatDesOffresId = etatOffresPNC.Id,
+                            StatutControle = "En attente"
+                        };
+
+                        foreach (var ligne in lignesOffresFiltrees)
+                        {
+                            int qteConsommee = ligne.DotationInitialeFRS - ligne.QuantiteRestanteFRS;
+                            if (qteConsommee < 0) qteConsommee = 0;
+
+                            etatOffresFRS.Lignes.Add(new LigneOffreFRS
+                            {
+                                CodeArticle = ligne.CodeArticle,
+                                NomArticle = ligne.Designation,
+                                DotationInitialeFRS = ligne.DotationInitialeFRS,
+                                QuantiteRestanteFRS = ligne.QuantiteRestanteFRS,
+                                QuantiteConsommeeFRS = qteConsommee
+                            });
+                        }
+                        _db.EtatsDesOffresFRS.Add(etatOffresFRS);
                     }
-                    _db.EtatsDesOffresFRS.Add(etatOffresFRS);
                 }
             }
 
