@@ -85,7 +85,7 @@ pipeline {
             }
             steps {
                 echo '--- Demarrage de l application VAB ---'
-                sh "docker compose up -d --force-recreate"
+                sh "docker-compose up -d --force-recreate"
                 echo 'Application deployee. Accessible sur http://localhost:8081'
             }
         }
