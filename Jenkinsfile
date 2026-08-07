@@ -86,6 +86,9 @@ pipeline {
             steps {
                 echo '--- Demarrage de l application VAB ---'
                 sh '''
+                    echo "Nettoyage des anciens conteneurs..."
+                    docker rm -f vab_sqlserver vab_web_app || true
+
                     if ! command -v docker-compose &> /dev/null; then
                         curl -sSL "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o ./docker-compose
                         chmod +x ./docker-compose
