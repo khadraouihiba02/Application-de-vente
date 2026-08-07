@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
     container_name: vab_web_app
     ports:
-      - "8080:80"
+      - "8081:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=VAB_DB;User Id=sa;Password=TunisairVAB2026!;TrustServerCertificate=True;
