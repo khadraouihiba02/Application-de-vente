@@ -85,7 +85,15 @@ pipeline {
             }
             steps {
                 echo '--- Demarrage de l application VAB ---'
-                sh "docker-compose up -d --force-recreate"
+                sh '''
+                    if ! command -v docker-compose &> /dev/null; then
+                        curl -sSL "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o ./docker-compose
+                        chmod +x ./docker-compose
+                        ./docker-compose up -d --force-recreate
+                    else
+                        docker-compose up -d --force-recreate
+                    fi
+                '''
                 echo 'Application deployee. Accessible sur http://localhost:8081'
             }
         }
