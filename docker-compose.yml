@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Service Base de données SQL Server 2022
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: vab_sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=TunisairVAB2026!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql/data
+    networks:
+      - vab-network
+
+  # Service Application Web ASP.NET Core VAB
+  web:
+    image: vab-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vab_web_app
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=VAB_DB;User Id=sa;Password=TunisairVAB2026!;TrustServerCertificate=True;
+    depends_on:
+      - sqlserver
+    networks:
+      - vab-network
+
+volumes:
+  sqldata:
+
+networks:
+  vab-network:
+    driver: bridge

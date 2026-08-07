@@ -1,0 +1,15 @@
+**/.classpath
+**/.dockerignore
+**/.env
+**/.git
+**/.gitattributes
+**/.gitignore
+**/.gitmodules
+**/.hg
+**/.idea
+**/.vscode
+**/.vs
+**/bin
+**/obj
+**/out
+**/TestResults
