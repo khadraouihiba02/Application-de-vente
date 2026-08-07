@@ -13,104 +13,96 @@ pipeline {
     stages {
 
         // ─── Étape 1 : Récupération du code source ────────────────────────────
-        stage('📥 Checkout') {
+        stage('Checkout') {
             steps {
                 echo '========================================'
-                echo '  Récupération du code source GitHub   '
+                echo '  Recuperation du code source GitHub   '
                 echo '========================================'
                 git branch: 'master', url: "${GIT_REPO}"
-                echo "✅ Code source récupéré avec succès."
+                echo 'Code source recupere avec succes.'
             }
         }
 
         // ─── Étape 2 : Restauration des dépendances NuGet ────────────────────
-        stage('📦 Restore') {
+        stage('Restore') {
             steps {
                 echo '========================================'
                 echo '  Restauration des packages NuGet       '
                 echo '========================================'
-                bat "dotnet restore \"${APP_PROJECT}\""
-                bat "dotnet restore \"${TEST_PROJECT}\""
-                echo "✅ Packages NuGet restaurés avec succès."
+                sh "dotnet restore \"${APP_PROJECT}\""
+                sh "dotnet restore \"${TEST_PROJECT}\""
+                echo 'Packages NuGet restaures avec succes.'
             }
         }
 
         // ─── Étape 3 : Compilation du projet ──────────────────────────────────
-        stage('🔨 Build') {
+        stage('Build') {
             steps {
                 echo '========================================'
                 echo '  Compilation de la solution .NET 8     '
                 echo '========================================'
-                bat "dotnet build \"${APP_PROJECT}\" --configuration Release --no-restore"
-                echo "✅ Projet compilé avec succès."
+                sh "dotnet build \"${APP_PROJECT}\" --configuration Release --no-restore"
+                echo 'Projet compile avec succes.'
             }
         }
 
         // ─── Étape 4 : Exécution des tests unitaires ──────────────────────────
-        stage('🧪 Unit Tests') {
+        stage('Unit Tests') {
             steps {
                 echo '========================================'
-                echo '  Exécution des tests unitaires xUnit   '
+                echo '  Execution des tests unitaires xUnit   '
                 echo '========================================'
-                bat "dotnet test \"${TEST_PROJECT}\" --no-restore --verbosity normal --logger \"trx;LogFileName=test_results.trx\""
-                echo "✅ Tests unitaires réussis."
+                sh "dotnet test \"${TEST_PROJECT}\" --no-restore --verbosity normal --logger \"trx;LogFileName=test_results.trx\""
+                echo 'Tests unitaires reussis.'
             }
             post {
                 always {
-                    // Publier les résultats des tests dans Jenkins
                     junit allowEmptyResults: true, testResults: '**/test_results.trx'
                 }
                 failure {
-                    echo "❌ Des tests ont échoué ! Le déploiement Docker est annulé."
+                    echo 'Des tests ont echoue ! Le deploiement Docker est annule.'
                 }
             }
         }
 
         // ─── Étape 5 : Build de l'image Docker ────────────────────────────────
-        stage('🐳 Docker Build') {
+        stage('Docker Build') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
                 echo '========================================'
-                echo '  Construction de l image Docker        '
+                echo '  Construction de limage Docker         '
                 echo '========================================'
-                bat "docker build -t ${DOCKER_IMAGE}:latest -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
-                echo "✅ Image Docker '${DOCKER_IMAGE}:${BUILD_NUMBER}' créée avec succès."
+                sh "docker build -t ${DOCKER_IMAGE}:latest -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
+                echo "Image Docker ${DOCKER_IMAGE}:${BUILD_NUMBER} creee avec succes."
             }
         }
 
-        // ─── Étape 6 : Démarrage de l'application via Docker Compose ──────────
-        stage('🚀 Deploy (Docker Compose)') {
+        // ─── Étape 6 : Démarrage via Docker Compose ───────────────────────────
+        stage('Deploy') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
                 echo '========================================'
-                echo '  Démarrage de l application VAB        '
+                echo '  Demarrage de lapplication VAB          '
                 echo '========================================'
-                bat "docker-compose up -d --force-recreate"
-                echo "✅ Application déployée. Accessible sur http://localhost:8081"
+                sh "docker compose up -d --force-recreate"
+                echo 'Application deployee. Accessible sur http://localhost:8081'
             }
         }
     }
 
-    // ─── Notifications finales du pipeline ────────────────────────────────────
     post {
         success {
-            echo ''
-            echo '╔══════════════════════════════════════════╗'
-            echo '║   ✅ PIPELINE RÉUSSI — VAB Déployée     ║'
-            echo '╚══════════════════════════════════════════╝'
+            echo 'PIPELINE REUSSI --- VAB Deployee avec succes'
         }
         failure {
-            echo ''
-            echo '╔══════════════════════════════════════════╗'
-            echo '║   ❌ PIPELINE ÉCHOUÉ — Vérifier logs    ║'
-            echo '╚══════════════════════════════════════════╝'
+            echo 'PIPELINE ECHOUE --- Verifier les logs ci-dessus'
         }
         always {
-            cleanWs()
+            deleteDir()
         }
     }
 }
