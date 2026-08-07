@@ -216,7 +216,7 @@ namespace ApplicationDeVente.Controllers
                 .Select(e => new SelectListItem
                 {
                     Value = e.Id.ToString(),
-                    Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol?.FN_NUMBER ?? "N/A" : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
+                    Text = $"FL: {e.NumeroFeuilleLigne} | Vol: {(e.VolsList.FirstOrDefault() != null ? e.VolsList.First().Vol.FN_NUMBER : "N/A")} | Date: {e.DateVol.ToString("dd/MM/yyyy")}"
                 })
                 .ToListAsync();
 

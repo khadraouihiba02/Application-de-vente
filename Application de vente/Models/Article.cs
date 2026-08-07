@@ -11,12 +11,12 @@ namespace ApplicationDeVente.Models
         [Required(ErrorMessage = "Le code article est obligatoire.")]
         [StringLength(50)]
         [Display(Name = "Code Article")]
-        public required string CodeArticle { get; set; }
+        public string CodeArticle { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Le nom de l'article est obligatoire.")]
         [StringLength(100)]
         [Display(Name = "Nom de l'Article")]
-        public required string NomArticle { get; set; }
+        public string NomArticle { get; set; } = string.Empty;
 
         [StringLength(250)]
         [Display(Name = "Description")]
