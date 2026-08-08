@@ -325,13 +325,34 @@ namespace ApplicationDeVente.Tests
         }
 
         // ─── GetDetailsVenteFRS ────────────────────────────────────────
-
+        
         [Fact]
         public async Task GetDetailsVenteFRS_ReturnsNotFound_WhenNotExists()
         {
             using var db = GetInMemoryDbContext();
             var result = await CreateController(db).GetDetailsVenteFRS(999);
             Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task GetDetailsVenteFRS_ReturnsJson_WhenExists()
+        {
+            using var db = GetInMemoryDbContext();
+            var article = CreateArticle();
+            db.Articles.Add(article);
+            db.EtatsDesVentesFRS.Add(new EtatDesVentesFRS
+            {
+                Id = 1, NumeroFeuilleLigne = "FLFRS1", DateVol = DateTime.Today,
+                Statut = "Saisi", ChiffreAffairesEUR = 50m,
+                Lignes = new List<LigneVenteFRS>
+                {
+                    new LigneVenteFRS { Id = 1, ArticleId = 1, Article = article, QuantiteVendue = 1, PrixUnitaireEUR = 50m }
+                }
+            });
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).GetDetailsVenteFRS(1);
+            Assert.IsType<JsonResult>(result);
         }
 
         // ─── GetDetailsOffreFRS ────────────────────────────────────────
@@ -342,6 +363,27 @@ namespace ApplicationDeVente.Tests
             using var db = GetInMemoryDbContext();
             var result = await CreateController(db).GetDetailsOffreFRS(999);
             Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task GetDetailsOffreFRS_ReturnsJson_WhenExists()
+        {
+            using var db = GetInMemoryDbContext();
+            var article = CreateArticle();
+            db.Articles.Add(article);
+            db.EtatsDesOffresFRS.Add(new EtatDesOffresFRS
+            {
+                Id = 1, NumeroFeuilleLigne = "FLFRS2", DateVol = DateTime.Today,
+                Statut = "Saisi", ChiffreAffairesEUR = 30m,
+                Lignes = new List<LigneOffreFRS>
+                {
+                    new LigneOffreFRS { Id = 1, ArticleId = 1, Article = article, QuantiteOfferte = 1, PrixUnitairePromoEUR = 30m }
+                }
+            });
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).GetDetailsOffreFRS(1);
+            Assert.IsType<JsonResult>(result);
         }
 
         // ─── GetCrewsByVol ─────────────────────────────────────────────
@@ -510,13 +552,37 @@ namespace ApplicationDeVente.Tests
         }
 
         // ─── ExporterVenteFRSCSSV ──────────────────────────────────────
-
+        
         [Fact]
         public async Task ExporterVenteFRSCSSV_ReturnsNotFound_WhenNotExists()
         {
             using var db = GetInMemoryDbContext();
             var result = await CreateController(db).ExporterVenteFRSCSSV(999);
             Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task ExporterVenteFRSCSSV_ReturnsFile_WhenExists()
+        {
+            using var db = GetInMemoryDbContext();
+            var article = CreateArticle();
+            db.Articles.Add(article);
+            db.EtatsDesVentesFRS.Add(new EtatDesVentesFRS
+            {
+                Id = 1, NumeroFeuilleLigne = "FLFRS1", DateVol = DateTime.Today,
+                Statut = "Saisi", ChiffreAffairesEUR = 50m,
+                Lignes = new List<LigneVenteFRS>
+                {
+                    new LigneVenteFRS { Id = 1, ArticleId = 1, Article = article, QuantiteVendue = 1, PrixUnitaireEUR = 50m }
+                }
+            });
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).ExporterVenteFRSCSSV(1);
+            
+            var fileResult = Assert.IsType<FileContentResult>(result);
+            Assert.Equal("text/csv", fileResult.ContentType);
+            Assert.Contains("FLFRS1", fileResult.FileDownloadName);
         }
 
         // ─── ExporterOffreFRSCSSV ──────────────────────────────────────
@@ -527,6 +593,30 @@ namespace ApplicationDeVente.Tests
             using var db = GetInMemoryDbContext();
             var result = await CreateController(db).ExporterOffreFRSCSSV(999);
             Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task ExporterOffreFRSCSSV_ReturnsFile_WhenExists()
+        {
+            using var db = GetInMemoryDbContext();
+            var article = CreateArticle();
+            db.Articles.Add(article);
+            db.EtatsDesOffresFRS.Add(new EtatDesOffresFRS
+            {
+                Id = 1, NumeroFeuilleLigne = "FLFRS2", DateVol = DateTime.Today,
+                Statut = "Saisi", ChiffreAffairesEUR = 30m,
+                Lignes = new List<LigneOffreFRS>
+                {
+                    new LigneOffreFRS { Id = 1, ArticleId = 1, Article = article, QuantiteOfferte = 1, PrixUnitairePromoEUR = 30m }
+                }
+            });
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).ExporterOffreFRSCSSV(1);
+            
+            var fileResult = Assert.IsType<FileContentResult>(result);
+            Assert.Equal("text/csv", fileResult.ContentType);
+            Assert.Contains("FLFRS2", fileResult.FileDownloadName);
         }
     }
 }
