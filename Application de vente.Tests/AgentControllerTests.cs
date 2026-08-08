@@ -338,20 +338,24 @@ namespace ApplicationDeVente.Tests
         public async Task GetDetailsVenteFRS_ReturnsJson_WhenExists()
         {
             using var db = GetInMemoryDbContext();
-            var article = CreateArticle();
-            db.Articles.Add(article);
-            db.EtatsDesVentesFRS.Add(new EtatDesVentesFRS
-            {
-                Id = 1, NumeroFeuilleLigne = "FLFRS1", DateVol = DateTime.Today,
-                Statut = "Saisi", ChiffreAffairesEUR = 50m,
-                Lignes = new List<LigneVenteFRS>
-                {
-                    new LigneVenteFRS { Id = 1, ArticleId = 1, Article = article, QuantiteVendue = 1, PrixUnitaireEUR = 50m }
-                }
-            });
+            var etatVente = new EtatDesVentes { NumeroFeuilleLigne = "FL123", Statut = "Saisi" };
+            db.EtatsDesVentes.Add(etatVente);
             await db.SaveChangesAsync();
 
-            var result = await CreateController(db).GetDetailsVenteFRS(1);
+            var etatFRS = new EtatDesVentesFRS
+            {
+                EtatDesVentesId = etatVente.Id,
+                NumeroEtat = "FLFRS1", DateReception = DateTime.Today,
+                StatutControle = "Saisi", ChiffreAffairesEUR = 50m,
+                Lignes = new List<LigneVenteFRS>
+                {
+                    new LigneVenteFRS { CodeArticle = "ART1", NomArticle = "Test", QuantiteVendueFRS = 1, PrixUnitaireFRS = 50m }
+                }
+            };
+            db.EtatsDesVentesFRS.Add(etatFRS);
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).GetDetailsVenteFRS(etatFRS.Id);
             Assert.IsType<JsonResult>(result);
         }
 
@@ -369,20 +373,24 @@ namespace ApplicationDeVente.Tests
         public async Task GetDetailsOffreFRS_ReturnsJson_WhenExists()
         {
             using var db = GetInMemoryDbContext();
-            var article = CreateArticle();
-            db.Articles.Add(article);
-            db.EtatsDesOffresFRS.Add(new EtatDesOffresFRS
-            {
-                Id = 1, NumeroFeuilleLigne = "FLFRS2", DateVol = DateTime.Today,
-                Statut = "Saisi", ChiffreAffairesEUR = 30m,
-                Lignes = new List<LigneOffreFRS>
-                {
-                    new LigneOffreFRS { Id = 1, ArticleId = 1, Article = article, QuantiteOfferte = 1, PrixUnitairePromoEUR = 30m }
-                }
-            });
+            var etatOffre = new EtatDesOffres { NumeroFeuilleLigne = "FL123", Statut = "Saisi" };
+            db.EtatsDesOffres.Add(etatOffre);
             await db.SaveChangesAsync();
 
-            var result = await CreateController(db).GetDetailsOffreFRS(1);
+            var etatFRS = new EtatDesOffresFRS
+            {
+                EtatDesOffresId = etatOffre.Id,
+                NumeroEtat = "FLFRS2", DateReception = DateTime.Today,
+                StatutControle = "Saisi",
+                Lignes = new List<LigneOffreFRS>
+                {
+                    new LigneOffreFRS { CodeArticle = "ART1", NomArticle = "Test", DotationInitialeFRS = 1 }
+                }
+            };
+            db.EtatsDesOffresFRS.Add(etatFRS);
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).GetDetailsOffreFRS(etatFRS.Id);
             Assert.IsType<JsonResult>(result);
         }
 
@@ -565,20 +573,24 @@ namespace ApplicationDeVente.Tests
         public async Task ExporterVenteFRSCSSV_ReturnsFile_WhenExists()
         {
             using var db = GetInMemoryDbContext();
-            var article = CreateArticle();
-            db.Articles.Add(article);
-            db.EtatsDesVentesFRS.Add(new EtatDesVentesFRS
-            {
-                Id = 1, NumeroFeuilleLigne = "FLFRS1", DateVol = DateTime.Today,
-                Statut = "Saisi", ChiffreAffairesEUR = 50m,
-                Lignes = new List<LigneVenteFRS>
-                {
-                    new LigneVenteFRS { Id = 1, ArticleId = 1, Article = article, QuantiteVendue = 1, PrixUnitaireEUR = 50m }
-                }
-            });
+            var etatVente = new EtatDesVentes { NumeroFeuilleLigne = "FL123", Statut = "Saisi" };
+            db.EtatsDesVentes.Add(etatVente);
             await db.SaveChangesAsync();
 
-            var result = await CreateController(db).ExporterVenteFRSCSSV(1);
+            var etatFRS = new EtatDesVentesFRS
+            {
+                EtatDesVentesId = etatVente.Id,
+                NumeroEtat = "FLFRS1", DateReception = DateTime.Today,
+                StatutControle = "Saisi", ChiffreAffairesEUR = 50m,
+                Lignes = new List<LigneVenteFRS>
+                {
+                    new LigneVenteFRS { CodeArticle = "ART1", NomArticle = "Test", QuantiteVendueFRS = 1, PrixUnitaireFRS = 50m }
+                }
+            };
+            db.EtatsDesVentesFRS.Add(etatFRS);
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).ExporterVenteFRSCSSV(etatFRS.Id);
             
             var fileResult = Assert.IsType<FileContentResult>(result);
             Assert.Equal("text/csv", fileResult.ContentType);
@@ -599,20 +611,24 @@ namespace ApplicationDeVente.Tests
         public async Task ExporterOffreFRSCSSV_ReturnsFile_WhenExists()
         {
             using var db = GetInMemoryDbContext();
-            var article = CreateArticle();
-            db.Articles.Add(article);
-            db.EtatsDesOffresFRS.Add(new EtatDesOffresFRS
-            {
-                Id = 1, NumeroFeuilleLigne = "FLFRS2", DateVol = DateTime.Today,
-                Statut = "Saisi", ChiffreAffairesEUR = 30m,
-                Lignes = new List<LigneOffreFRS>
-                {
-                    new LigneOffreFRS { Id = 1, ArticleId = 1, Article = article, QuantiteOfferte = 1, PrixUnitairePromoEUR = 30m }
-                }
-            });
+            var etatOffre = new EtatDesOffres { NumeroFeuilleLigne = "FL123", Statut = "Saisi" };
+            db.EtatsDesOffres.Add(etatOffre);
             await db.SaveChangesAsync();
 
-            var result = await CreateController(db).ExporterOffreFRSCSSV(1);
+            var etatFRS = new EtatDesOffresFRS
+            {
+                EtatDesOffresId = etatOffre.Id,
+                NumeroEtat = "FLFRS2", DateReception = DateTime.Today,
+                StatutControle = "Saisi",
+                Lignes = new List<LigneOffreFRS>
+                {
+                    new LigneOffreFRS { CodeArticle = "ART1", NomArticle = "Test", DotationInitialeFRS = 1 }
+                }
+            };
+            db.EtatsDesOffresFRS.Add(etatFRS);
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).ExporterOffreFRSCSSV(etatFRS.Id);
             
             var fileResult = Assert.IsType<FileContentResult>(result);
             Assert.Equal("text/csv", fileResult.ContentType);
