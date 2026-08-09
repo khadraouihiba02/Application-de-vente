@@ -31,7 +31,7 @@ pipeline {
                 }
             }
             environment {
-                SONAR_TOKEN = 'sqp_a00a53e8d355c2d972e47141656428e7c92235ce'
+                SONAR_TOKEN = 'sqp_af989df0b88c413e7fdcb82b9cd9a70a63a95e4e'
                 SONAR_HOST_URL = 'http://host.docker.internal:9000'
             }
             stages {
