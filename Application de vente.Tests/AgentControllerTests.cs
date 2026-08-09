@@ -634,5 +634,187 @@ namespace ApplicationDeVente.Tests
             Assert.Equal("text/csv", fileResult.ContentType);
             Assert.Contains("FLFRS2", fileResult.FileDownloadName);
         }
+
+        // ─── SaisirVentes POST avec offres (AjouterEtatDesOffres) ─────
+
+        [Fact]
+        public async Task SaisirVentes_POST_WithOffres_CreatesEtatOffres()
+        {
+            using var db = GetInMemoryDbContext();
+            var article = CreateArticle(1);
+            var pnc = CreatePnc(1);
+            db.Articles.Add(article);
+            db.PNCs.Add(pnc);
+            db.Vols.Add(new Vol
+            {
+                Id = 1, FN_NUMBER = "TU103",
+                DEP_AP_ACTUAL = "TUN", ARR_AP_ACTUAL = "CDG",
+                DAY_OF_ORIGIN = DateTime.Today, Actif = true
+            });
+            await db.SaveChangesAsync();
+
+            var vm = new SaisieVentesViewModel
+            {
+                VolId = 1,
+                NumeroFeuilleLigne = "FL888",
+                DateVol = DateTime.Today,
+                PNCVendeurId = 1,
+                TauxChangeApplique = 3.4m,
+                MontantEncaisseReel = 100m,
+                LignesArticles = new List<LigneSaisieArticle>
+                {
+                    new LigneSaisieArticle
+                    {
+                        ArticleId = 1, QuantiteVendue = 2,
+                        PrixUnitaireEUR = 50m, QuantiteDotation = 5, QuantiteCompl = 0
+                    }
+                },
+                LignesOffres = new List<LigneSaisieOffre>
+                {
+                    new LigneSaisieOffre
+                    {
+                        ArticleId = 1, QuantiteOfferte = 3, QuantiteDotation = 5, QuantiteCompl = 0,
+                        PrixUnitairePromoEUR = 10m
+                    }
+                }
+            };
+
+            var result = await CreateController(db).SaisirVentes(vm);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Dashboard", redirect.ActionName);
+            // EtatDesOffres doit avoir été créé en plus de EtatDesVentes
+            Assert.Equal(1, await db.EtatsDesVentes.CountAsync());
+            Assert.Equal(1, await db.EtatsDesOffres.CountAsync());
+        }
+
+        // ─── SaisirVentesFRS POST avec offres FRS ─────────────────────
+
+        [Fact]
+        public async Task SaisirVentesFRS_POST_WithOffresFRS_CreatesEtatOffresFRS()
+        {
+            using var db = GetInMemoryDbContext();
+            var pnc = CreatePnc();
+            db.PNCs.Add(pnc);
+            var etatVente = CreateEtatVentes(1, pnc);
+            db.EtatsDesVentes.Add(etatVente);
+            // Créer un EtatDesOffres associé (même FL et même date)
+            db.EtatsDesOffres.Add(new EtatDesOffres
+            {
+                NumeroFeuilleLigne = etatVente.NumeroFeuilleLigne,
+                DateVol = etatVente.DateVol,
+                Statut = "Saisi"
+            });
+            await db.SaveChangesAsync();
+
+            var vm = new SaisieVentesFRSViewModel
+            {
+                EtatDesVentesId = 1,
+                NumeroEtat = "FRS002",
+                DateReception = DateTime.Today,
+                TauxChangeApplique = 3.4m,
+                MontantDeclareReelTND = 50m,
+                LignesArticles = new List<LigneSaisieVenteFRS>
+                {
+                    new LigneSaisieVenteFRS
+                    {
+                        CodeArticle = "ART01", Designation = "Test",
+                        QuantiteVendueFRS = 2, PrixUnitaireFRS = 25m
+                    }
+                },
+                LignesOffres = new List<LigneSaisieOffreFRS>
+                {
+                    new LigneSaisieOffreFRS
+                    {
+                        CodeArticle = "ART01", Designation = "Test",
+                        DotationInitialeFRS = 5, QuantiteRestanteFRS = 3
+                    }
+                }
+            };
+
+            var result = await CreateController(db).SaisirVentesFRS(vm);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Dashboard", redirect.ActionName);
+            Assert.Equal(1, await db.EtatsDesVentesFRS.CountAsync());
+            Assert.Equal(1, await db.EtatsDesOffresFRS.CountAsync());
+        }
+
+        // ─── GetDetailsVente avec VolsList ─────────────────────────────
+
+        [Fact]
+        public async Task GetDetailsVente_WithVolsListAndLignes_ReturnsFullJson()
+        {
+            using var db = GetInMemoryDbContext();
+            var article = CreateArticle();
+            var pnc = CreatePnc();
+            var vol = new Vol
+            {
+                Id = 1, FN_NUMBER = "TU777",
+                DEP_AP_ACTUAL = "TUN", ARR_AP_ACTUAL = "CDG",
+                DAY_OF_ORIGIN = DateTime.Today, Actif = true
+            };
+            db.Articles.Add(article);
+            db.PNCs.Add(pnc);
+            db.Vols.Add(vol);
+            await db.SaveChangesAsync();
+
+            var etat = new EtatDesVentes
+            {
+                NumeroFeuilleLigne = "FL777", DateVol = DateTime.Today,
+                PNCVendeurId = pnc.Id, Statut = "Saisi",
+                MontantEncaisseTND = 300m,
+                Lignes = new List<LigneVente>
+                {
+                    new LigneVente { ArticleId = article.Id, QuantiteVendue = 3, PrixUnitaireEUR = 50m }
+                }
+            };
+            db.EtatsDesVentes.Add(etat);
+            await db.SaveChangesAsync();
+            db.EtatDesVentesVols.Add(new EtatDesVentesVol { EtatDesVentesId = etat.Id, VolId = vol.Id });
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).GetDetailsVente(etat.Id);
+
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            Assert.NotNull(jsonResult.Value);
+        }
+
+        // ─── GetDetailsOffre avec VolsList ─────────────────────────────
+
+        [Fact]
+        public async Task GetDetailsOffre_WithVolsListAndLignes_ReturnsFullJson()
+        {
+            using var db = GetInMemoryDbContext();
+            var article = CreateArticle();
+            var vol = new Vol
+            {
+                Id = 1, FN_NUMBER = "TU888",
+                DEP_AP_ACTUAL = "TUN", ARR_AP_ACTUAL = "CDG",
+                DAY_OF_ORIGIN = DateTime.Today, Actif = true
+            };
+            db.Articles.Add(article);
+            db.Vols.Add(vol);
+            await db.SaveChangesAsync();
+
+            var etat = new EtatDesOffres
+            {
+                NumeroFeuilleLigne = "FL888", DateVol = DateTime.Today,
+                Statut = "Saisi", ChiffreAffairesEUR = 200m,
+                Lignes = new List<LigneOffre>
+                {
+                    new LigneOffre { ArticleId = article.Id, QuantiteOfferte = 2, PrixUnitairePromoEUR = 30m }
+                }
+            };
+            db.EtatsDesOffres.Add(etat);
+            await db.SaveChangesAsync();
+            db.EtatDesOffresVols.Add(new EtatDesOffresVol { EtatDesOffresId = etat.Id, VolId = vol.Id });
+            await db.SaveChangesAsync();
+
+            var result = await CreateController(db).GetDetailsOffre(etat.Id);
+
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            Assert.NotNull(jsonResult.Value);
+        }
     }
 }
