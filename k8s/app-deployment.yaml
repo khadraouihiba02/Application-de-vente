@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vab-app-deployment
+  labels:
+    app: vab-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vab-app
+  template:
+    metadata:
+      labels:
+        app: vab-app
+    spec:
+      containers:
+      - name: vab-app
+        image: vab-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ConnectionStrings__DefaultConnection
+          value: "Server=mssql-service;Database=VAB;User Id=sa;Password=Sqlserver@2026;TrustServerCertificate=True;"
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
