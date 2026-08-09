@@ -55,7 +55,9 @@ pipeline {
                                 /d:sonar.host.url="${SONAR_HOST_URL}" \\
                                 /d:sonar.token="${SONAR_TOKEN}" \\
                                 /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \\
-                                /d:sonar.cs.vstest.reportsPaths="**/test_results.trx"
+                                /d:sonar.cs.vstest.reportsPaths="**/test_results.trx" \\
+                                /d:sonar.exclusions="**/coveragereport/**,**/TestResults/**,**/*.html,**/*.htm,**/wwwroot/lib/**,**/Migrations/**" \\
+                                /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs,**/wwwroot/**"
                             dotnet restore "${APP_PROJECT}"
                             dotnet restore "${TEST_PROJECT}"
                         '''

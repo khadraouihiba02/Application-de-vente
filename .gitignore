@@ -370,4 +370,11 @@ appsettings.*.json
 
 # Fichiers d'exemples locaux
 Exemple_Import_Articles.xlsx
+
+# ── Rapports de couverture de code (générés automatiquement) ──
+coveragereport/
+TestResults/
+coverage.opencover.xml
+coverage.cobertura.xml
+*.coveragexml
 
