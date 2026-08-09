@@ -14,6 +14,10 @@ spec:
       labels:
         app: vab-app
     spec:
+      initContainers:
+      - name: wait-for-sql
+        image: busybox
+        command: ['sh', '-c', 'until nc -z mssql-service 1433; do echo "En attente de SQL Server..."; sleep 3; done; echo "SQL Server est prêt !"']
       containers:
       - name: vab-app
         image: vab-app:latest
