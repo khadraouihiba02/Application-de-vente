@@ -162,10 +162,10 @@ namespace ApplicationDeVente.Controllers
                     .Include(e => e.VolsList).ThenInclude(ev => ev.Vol)
                     .OrderByDescending(e => e.Id).Take(5).ToListAsync(),
                 DerniersEtatsFRS = await _db.EtatsDesVentesFRS
-                    .Include(e => e.EtatDesVentes).ThenInclude(ev => ev.VolsList).ThenInclude(ev => ev.Vol)
+                    .Include(e => e.EtatDesVentes!).ThenInclude(ev => ev.VolsList).ThenInclude(ev => ev.Vol)
                     .OrderByDescending(e => e.Id).Take(5).ToListAsync(),
                 DerniersEtatsOffresFRS = await _db.EtatsDesOffresFRS
-                    .Include(e => e.EtatDesOffres).ThenInclude(ev => ev.VolsList).ThenInclude(ev => ev.Vol)
+                    .Include(e => e.EtatDesOffres!).ThenInclude(ev => ev.VolsList).ThenInclude(ev => ev.Vol)
                     .OrderByDescending(e => e.Id).Take(5).ToListAsync()
             };
 

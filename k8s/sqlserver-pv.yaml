@@ -1,24 +1,8 @@
 apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mssql-pv
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/mnt/data/mssql"
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mssql-pvc
 spec:
-  storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:

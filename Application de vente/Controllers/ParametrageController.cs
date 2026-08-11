@@ -141,7 +141,7 @@ namespace ApplicationDeVente.Controllers
                     using (var workbook = new ClosedXML.Excel.XLWorkbook(stream))
                     {
                         var worksheet = workbook.Worksheet(1);
-                        var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Ignorer l'en-tête
+                        var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1).Cast<ClosedXML.Excel.IXLRow>() ?? Enumerable.Empty<ClosedXML.Excel.IXLRow>(); // Ignorer l'en-tête
 
                         int ajoutCount = 0;
                         foreach (var row in rows)
