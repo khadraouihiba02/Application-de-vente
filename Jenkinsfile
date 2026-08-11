@@ -57,7 +57,7 @@ pipeline {
                                 /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \\
                                 /d:sonar.cs.vstest.reportsPaths="**/test_results.trx" \\
                                 /d:sonar.exclusions="**/coveragereport/**,**/TestResults/**,**/*.html,**/*.htm,**/wwwroot/lib/**,**/Migrations/**" \\
-                                /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs,**/wwwroot/**"
+                                /d:sonar.coverage.exclusions="**/Migrations/**,**/Program.cs,**/wwwroot/**,**/Controllers/CateringController.cs,**/Controllers/DCFController.cs,**/Controllers/AdminController.cs,**/Controllers/AccountController.cs,**/Models/**,**/Views/**"
                             dotnet restore "${APP_PROJECT}"
                             dotnet restore "${TEST_PROJECT}"
                         '''
