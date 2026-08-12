@@ -4,6 +4,7 @@ using ApplicationDeVente.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Localization;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,9 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 });
 
 app.UseRouting();
+
+app.UseMetricServer();
+app.UseHttpMetrics();
 
 app.UseSession();
 app.UseAuthentication();
