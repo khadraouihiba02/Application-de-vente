@@ -88,9 +88,13 @@
                     </table>
                 </div>
                 <div class="mt-4 text-end d-print-none">
-                    <button class="btn btn-success" type="button">
-                        <i class="fas fa-paper-plane me-2"></i>Transmettre à la Direction Gestion Paie
-                    </button>
+                    <form asp-action="TransmettrePaie" method="post" style="display: inline;">
+                        <input type="hidden" name="mois" value="@Model.Mois" />
+                        <input type="hidden" name="annee" value="@Model.Annee" />
+                        <button class="btn btn-success" type="submit">
+                            <i class="fas fa-paper-plane me-2"></i>Transmettre à la Direction Gestion Paie
+                        </button>
+                    </form>
                 </div>
             }
         </div>

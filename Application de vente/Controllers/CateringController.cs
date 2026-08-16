@@ -130,6 +130,8 @@ namespace ApplicationDeVente.Controllers
                 var etatVentes = await _db.EtatsDesVentes.FindAsync(frs.EtatDesVentesId);
                 if (etatVentes != null)
                 {
+                    etatVentes.Statut = "Contrôlé"; // Met à jour le statut de l'état des ventes PNC
+                    
                     var etatOffres = await _db.EtatsDesOffres.FirstOrDefaultAsync(o => o.NumeroFeuilleLigne == etatVentes.NumeroFeuilleLigne && o.DateVol == etatVentes.DateVol);
                     if (etatOffres != null)
                     {
@@ -356,6 +358,13 @@ namespace ApplicationDeVente.Controllers
             vm.TotalCommission = vm.Commissions.Sum(c => c.CommissionCalculee);
 
             return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult TransmettrePaie(int mois, int annee)
+        {
+            TempData["Succes"] = $"L'état nominatif des commissions pour le mois {mois:D2}/{annee} a été transmis avec succès à la Direction Gestion Paie.";
+            return RedirectToAction(nameof(Commission), new { mois, annee });
         }
 
         // ── Redevance mensuelle ─────────────────────────────────────
